@@ -8,11 +8,11 @@ public class Receita extends TransacaoBase {
     }
 
     @Override
-    public void aplicarTransacao(Carteira carteira) {
+    public void aplicarTransacao(Carteira carteira, Dinheiro valorEfetivo) {
         if (carteira == null) {
             System.out.println("A carteira está vazia");
             return;
         }
-        carteira.creditar(getValor());
+        carteira.creditar(valorEfetivo);
     }
 }

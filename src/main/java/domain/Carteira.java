@@ -13,18 +13,18 @@ public class Carteira {
     private LocalDateTime dataModificacao;
     List<Transacao> transacaoList;
 
-    public Carteira(String titulo, MoedaTipo tipo) {
+    public Carteira(String titulo) {
         this.titulo = titulo;
         this.dataCriacao = LocalDateTime.now();
-        this.saldo = new Dinheiro(BigDecimal.ZERO, tipo);
+        this.saldo = new Dinheiro(BigDecimal.ZERO, MoedaTipo.REAL);
         this.transacaoList = new ArrayList<>();
     }
 
-    public void processarTransacao(Transacao transacao) {
+    public void processarTransacao(Transacao transacao, Dinheiro valorEfetivo) {
         if (transacao == null) {
             throw new IllegalArgumentException("A transação não pode ser nula.");
         }
-        transacao.aplicarTransacao(this);
+        transacao.aplicarTransacao(this, valorEfetivo);
         this.transacaoList.add(transacao);
         dataModificacao = LocalDateTime.now();
     }
@@ -54,6 +54,26 @@ public class Carteira {
         String ultima = "Última modificação: " + dataModificacao.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
         sb.append(texto).append(ultima);
         System.out.println(texto);
+    }
+
+    public void listarTransacoes() {
+        if (transacaoList.isEmpty()) {
+            System.out.println("Não existem transações realizadas nessa carteira");
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("Lista de transações\n").append("-------------------------\n");
+        for (Transacao t : transacaoList) {
+            sb.append("Descrição: " + t.getDescricao() + "\n");
+            sb.append("Categoria: " + t.getCategoria().getDescricao() + "\n");
+            sb.append("Valor: " + t.getValor().getQuantia() + "\n");
+            DateTimeFormatter formatoPadrao = DateTimeFormatter.ofPattern("dd/mm/yyyy hh:mm:ss");
+            sb.append("Data: " + t.getDataTransacao().format(formatoPadrao) + "\n");
+            sb.append("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+        }
+        System.out.println(sb);
     }
 
     public String getTitulo() {

@@ -10,11 +10,11 @@ public class Despesa extends TransacaoBase {
     }
 
     @Override
-    public void aplicarTransacao(Carteira carteira) {
+    public void aplicarTransacao(Carteira carteira, Dinheiro valorEfetivo) {
         if (carteira == null) {
             System.out.println("A carteira está vazia");
             return;
         }
-        carteira.debitar(getValor());
+        carteira.debitar(valorEfetivo);
     }
 }

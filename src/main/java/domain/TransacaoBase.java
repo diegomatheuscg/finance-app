@@ -15,8 +15,7 @@ public abstract class TransacaoBase implements Transacao{
         this.dataTransacao = LocalDateTime.now();
     }
 
-
-    public abstract void aplicarTransacao(Carteira carteira);
+    public abstract void aplicarTransacao(Carteira carteira, Dinheiro valorEfetivo);
 
     public Categoria getCategoria() {
         return categoria;
