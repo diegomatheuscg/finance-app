@@ -22,7 +22,9 @@ public class CategoryRequest {
     @NotNull(message = "O tipo da categoria é obrigatório (INCOME ou EXPENSE)")
     private TipoTransacao type;
 
+    @Size(max = 20, message = "A cor deve ter no máximo 20 caracteres")
     private String color;
 
+    @Size(max = 50, message = "O ícone deve ter no máximo 50 caracteres")
     private String icon;
 }
