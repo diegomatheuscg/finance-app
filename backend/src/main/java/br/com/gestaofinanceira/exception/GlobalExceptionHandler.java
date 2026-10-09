@@ -38,6 +38,28 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
     }
 
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<RespostaErro> handleConflict(ConflictException ex) {
+        RespostaErro error = RespostaErro.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.CONFLICT.value())
+                .error(HttpStatus.CONFLICT.getReasonPhrase())
+                .message(ex.getMessage())
+                .build();
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(UnauthenticatedException.class)
+    public ResponseEntity<RespostaErro> handleUnauthenticated(UnauthenticatedException ex) {
+        RespostaErro error = RespostaErro.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .error(HttpStatus.UNAUTHORIZED.getReasonPhrase())
+                .message(ex.getMessage())
+                .build();
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<RespostaErro> handleAccessDenied(AccessDeniedException ex) {
         RespostaErro error = RespostaErro.builder()

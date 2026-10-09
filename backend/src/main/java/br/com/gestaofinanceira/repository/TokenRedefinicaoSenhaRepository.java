@@ -12,4 +12,6 @@ public interface TokenRedefinicaoSenhaRepository extends JpaRepository<TokenRede
     Optional<TokenRedefinicaoSenha> findByToken(String token);
 
     Optional<TokenRedefinicaoSenha> findByUsuarioId(Long usuarioId);
+
+    void deleteByUsuarioId(Long usuarioId);
 }
