@@ -1,7 +1,7 @@
 package br.com.gestaofinanceira.entity.enums;
 
 public enum PapelCarteira {
-    DONO,
+    OWNER,
     EDITOR,
-    VISUALIZADOR
+    VIEWER
 }

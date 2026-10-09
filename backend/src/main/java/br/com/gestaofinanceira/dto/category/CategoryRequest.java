@@ -19,7 +19,7 @@ public class CategoryRequest {
     @Size(max = 80, message = "O nome da categoria deve ter no máximo 80 caracteres")
     private String name;
 
-    @NotNull(message = "O tipo da categoria é obrigatório (RECEITA ou DESPESA)")
+    @NotNull(message = "O tipo da categoria é obrigatório (INCOME ou EXPENSE)")
     private TipoTransacao type;
 
     private String color;

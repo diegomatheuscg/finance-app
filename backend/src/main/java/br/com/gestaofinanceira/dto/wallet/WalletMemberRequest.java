@@ -19,6 +19,6 @@ public class WalletMemberRequest {
     @Email(message = "O formato do e-mail é inválido")
     private String email;
 
-    @NotNull(message = "O papel do membro é obrigatório (DONO, EDITOR ou VISUALIZADOR)")
+    @NotNull(message = "O papel do membro é obrigatório (OWNER, EDITOR ou VIEWER)")
     private PapelCarteira role;
 }

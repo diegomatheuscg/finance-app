@@ -19,7 +19,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class TransactionRequest {
 
-    @NotNull(message = "O tipo da transação é obrigatório (RECEITA ou DESPESA)")
+    @NotNull(message = "O tipo da transação é obrigatório (INCOME ou EXPENSE)")
     private TipoTransacao type;
 
     @NotNull(message = "O valor é obrigatório")

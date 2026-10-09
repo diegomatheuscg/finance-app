@@ -13,6 +13,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UpdateMemberRoleRequest {
 
-    @NotNull(message = "O papel do membro é obrigatório (DONO, EDITOR ou VISUALIZADOR)")
+    @NotNull(message = "O papel do membro é obrigatório (OWNER, EDITOR ou VIEWER)")
     private PapelCarteira role;
 }
