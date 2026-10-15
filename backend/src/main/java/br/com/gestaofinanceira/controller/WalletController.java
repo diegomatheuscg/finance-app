@@ -2,6 +2,9 @@ package br.com.gestaofinanceira.controller;
 
 import br.com.gestaofinanceira.dto.wallet.WalletRequest;
 import br.com.gestaofinanceira.dto.wallet.WalletResponse;
+import br.com.gestaofinanceira.dto.wallet.UpdateMemberRoleRequest;
+import br.com.gestaofinanceira.dto.wallet.WalletMemberRequest;
+import br.com.gestaofinanceira.dto.wallet.WalletMemberResponse;
 import br.com.gestaofinanceira.security.AuthenticatedUser;
 import br.com.gestaofinanceira.service.WalletService;
 import jakarta.validation.Valid;
@@ -10,6 +13,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -68,6 +72,40 @@ public class WalletController {
             @AuthenticationPrincipal AuthenticatedUser user,
             @PathVariable Long walletId) {
         walletService.delete(user.userId(), walletId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{walletId}/members")
+    public ResponseEntity<List<WalletMemberResponse>> listMembers(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long walletId) {
+        return ResponseEntity.ok(walletService.listMembers(user.userId(), walletId));
+    }
+
+    @PostMapping("/{walletId}/members")
+    public ResponseEntity<WalletMemberResponse> addMember(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long walletId,
+            @Valid @RequestBody WalletMemberRequest request) {
+        return ResponseEntity.ok(walletService.addMember(user.userId(), walletId, request));
+    }
+
+    @PatchMapping("/{walletId}/members/{memberUserId}")
+    public ResponseEntity<WalletMemberResponse> updateMemberRole(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long walletId,
+            @PathVariable Long memberUserId,
+            @Valid @RequestBody UpdateMemberRoleRequest request) {
+        return ResponseEntity.ok(
+                walletService.updateMemberRole(user.userId(), walletId, memberUserId, request));
+    }
+
+    @DeleteMapping("/{walletId}/members/{memberUserId}")
+    public ResponseEntity<Void> removeMember(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long walletId,
+            @PathVariable Long memberUserId) {
+        walletService.removeMember(user.userId(), walletId, memberUserId);
         return ResponseEntity.noContent().build();
     }
 }
