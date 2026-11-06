@@ -14,7 +14,7 @@ export function WalletProvider({ children }) {
   const [status, setStatus] = useState('loading')
   const [error, setError] = useState('')
 
-  const loadWallets = useCallback(async () => {
+  const loadWallets = useCallback(async (preferredWalletId = null) => {
     setStatus('loading')
     setError('')
 
@@ -22,10 +22,15 @@ export function WalletProvider({ children }) {
       const loadedWallets = await walletApi.list()
       setWallets(loadedWallets)
       setActiveWalletId((currentId) => {
+        const preferredWallet = loadedWallets.find(
+          (wallet) => String(wallet.id) === String(preferredWalletId),
+        )
         const currentWalletExists = loadedWallets.some(
           (wallet) => String(wallet.id) === String(currentId),
         )
-        const nextId = currentWalletExists ? currentId : loadedWallets[0]?.id || null
+        const nextId = preferredWallet?.id
+          || (currentWalletExists ? currentId : loadedWallets[0]?.id)
+          || null
 
         if (nextId) {
           window.localStorage.setItem('activeWalletId', String(nextId))
@@ -36,6 +41,7 @@ export function WalletProvider({ children }) {
         return nextId ? String(nextId) : null
       })
       setStatus('ready')
+      return loadedWallets
     } catch (loadError) {
       if (loadError instanceof ApiError && loadError.status === 401) {
         logout()
