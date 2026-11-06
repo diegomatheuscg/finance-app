@@ -60,6 +60,7 @@ export function WalletsPage() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [error, setError] = useState('')
+  const [listError, setListError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [members, setMembers] = useState([])
   const [membersError, setMembersError] = useState('')
@@ -101,6 +102,7 @@ export function WalletsPage() {
 
   function openCreateModal() {
     closeModal()
+    setListError('')
     setModal({ mode: 'create' })
   }
 
@@ -108,6 +110,7 @@ export function WalletsPage() {
     setName(wallet.name)
     setDescription(wallet.description || '')
     setError('')
+    setListError('')
     setMembersError('')
     setModal({ mode: 'edit', walletId: wallet.id })
   }
@@ -168,7 +171,7 @@ export function WalletsPage() {
       await walletApi.remove(wallet.id)
       await reloadWallets()
     } catch (deleteError) {
-      setError(deleteError.message || 'Não foi possível excluir a carteira.')
+      setListError(deleteError.message || 'Não foi possível excluir a carteira.')
     }
   }
 
@@ -216,6 +219,11 @@ export function WalletsPage() {
             <span>{loadError}</span>
             <Button variant="outline" size="sm" onClick={reloadWallets}>Tentar novamente</Button>
           </AlertDescription>
+        </Alert>
+      )}
+      {listError && (
+        <Alert variant="destructive">
+          <AlertDescription>{listError}</AlertDescription>
         </Alert>
       )}
       {status === 'ready' && wallets.length === 0 && (
@@ -309,7 +317,7 @@ export function WalletsPage() {
               </div>
             )}
 
-            {modal.mode === 'edit' && isOwner && (
+            {modal.mode === 'edit' && (
               <div className="grid gap-3 border-t pt-4">
                 <h3 className="text-sm font-medium">Membros</h3>
                 {membersError && (
@@ -329,7 +337,7 @@ export function WalletsPage() {
                       <>
                         <select
                           className="h-9 rounded-md border bg-background px-2 text-sm"
-                          disabled={member.userId === user?.id}
+                          disabled={!isOwner || member.userId === user?.id}
                           value={member.role}
                           onChange={(event) => handleRoleChange(member, event.target.value)}
                         >
@@ -337,7 +345,7 @@ export function WalletsPage() {
                           <option value="EDITOR">EDITOR</option>
                           <option value="VIEWER">VIEWER</option>
                         </select>
-                        {member.userId !== user?.id && (
+                        {isOwner && member.userId !== user?.id && (
                           <Button type="button" variant="outline" size="sm" onClick={() => handleRemoveMember(member)}>
                             Remover
                           </Button>
@@ -346,30 +354,32 @@ export function WalletsPage() {
                     )}
                   </div>
                 ))}
-                <MemberFields
-                  memberEmail={memberEmail}
-                  memberRole={memberRole}
-                  onEmailChange={setMemberEmail}
-                  onRoleChange={setMemberRole}
-                  onAdd={async () => {
-                    if (!memberEmail.trim()) {
-                      setMembersError('Informe o e-mail do membro.')
-                      return
-                    }
-                    try {
-                      const newMember = await walletApi.addMember(modal.walletId, {
-                        email: memberEmail.trim(),
-                        role: memberRole,
-                      })
-                      setMembers((currentMembers) => [...currentMembers, newMember])
-                      setMemberEmail('')
-                      setMemberRole('VIEWER')
-                      setMembersError('')
-                    } catch (addError) {
-                      setMembersError(addError.message || 'Não foi possível adicionar o membro.')
-                    }
-                  }}
-                />
+                {isOwner && (
+                  <MemberFields
+                    memberEmail={memberEmail}
+                    memberRole={memberRole}
+                    onEmailChange={setMemberEmail}
+                    onRoleChange={setMemberRole}
+                    onAdd={async () => {
+                      if (!memberEmail.trim()) {
+                        setMembersError('Informe o e-mail do membro.')
+                        return
+                      }
+                      try {
+                        const newMember = await walletApi.addMember(modal.walletId, {
+                          email: memberEmail.trim(),
+                          role: memberRole,
+                        })
+                        setMembers((currentMembers) => [...currentMembers, newMember])
+                        setMemberEmail('')
+                        setMemberRole('VIEWER')
+                        setMembersError('')
+                      } catch (addError) {
+                        setMembersError(addError.message || 'Não foi possível adicionar o membro.')
+                      }
+                    }}
+                  />
+                )}
               </div>
             )}
 
