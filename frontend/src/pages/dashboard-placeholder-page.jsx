@@ -1,16 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-  ArrowDownRight,
-  ArrowUpRight,
-  BarChart3,
-  CalendarDays,
-  CircleAlert,
-  LogOut,
-  ReceiptText,
-  RefreshCw,
-  WalletCards,
-} from 'lucide-react'
-import {
   Bar,
   BarChart,
   CartesianGrid,
@@ -19,8 +8,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { Link, useNavigate } from 'react-router-dom'
-import { Brand } from '@/components/auth/auth-layout'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -52,17 +39,14 @@ function formatCurrency(value) {
   return currencyFormatter.format(value)
 }
 
-function SummaryCard({ label, value, icon: Icon, tone }) {
+function SummaryCard({ label, value }) {
   return (
     <Card>
-      <CardContent className="flex items-start justify-between p-5">
+      <CardContent className="p-5">
         <div>
           <p className="text-sm text-muted-foreground">{label}</p>
           <p className="mt-2 text-2xl font-semibold tracking-tight">{formatCurrency(value)}</p>
         </div>
-        <span className={`flex size-10 items-center justify-center rounded-xl ${tone}`}>
-          <Icon size={19} aria-hidden="true" />
-        </span>
       </CardContent>
     </Card>
   )
@@ -84,8 +68,7 @@ function DashboardLoading() {
 }
 
 export function DashboardPlaceholderPage() {
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
+  const { user } = useAuth()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -113,89 +96,24 @@ export function DashboardPlaceholderPage() {
   const hasTransactions = Boolean(data?.recentTransactions?.length)
   const chartData = useMemo(() => data?.monthly || [], [data])
 
-  function handleLogout() {
-    logout()
-    navigate('/login', { replace: true })
-  }
-
   return (
-    <main className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
-          <Brand />
-          <div className="flex items-center gap-3">
-            <Link
-              to="/app/perfil/senha"
-              className="hidden text-sm font-medium text-primary hover:underline sm:inline"
-            >
-              Alterar senha
-            </Link>
-            <span className="hidden text-sm text-muted-foreground md:inline">
-              {user?.name || user?.email}
-            </span>
-            <Button variant="outline" size="sm" onClick={handleLogout}>
-              <LogOut size={16} aria-hidden="true" />
-              Sair
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <div className="mx-auto grid max-w-7xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[220px_1fr]">
-        <aside className="hidden lg:block">
-          <p className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Menu
-          </p>
-          <nav className="mt-3 grid gap-1">
-            <Link
-              to="/dashboard"
-              className="flex items-center gap-3 rounded-lg bg-secondary px-3 py-2.5 text-sm font-semibold text-secondary-foreground"
-            >
-              <BarChart3 size={17} aria-hidden="true" />
-              Dashboard
-            </Link>
-            <span className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground">
-              <ReceiptText size={17} aria-hidden="true" />
-              Lançamentos
-            </span>
-            <Link
-              to="/app/perfil/senha"
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-            >
-              <WalletCards size={17} aria-hidden="true" />
-              Minha conta
-            </Link>
-          </nav>
-        </aside>
-
-        <section className="min-w-0">
+    <section className="min-w-0">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-sm font-medium text-primary">Visão geral</p>
               <h1 className="mt-1 text-3xl font-semibold tracking-tight">
                 Olá, {firstName}!
               </h1>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Acompanhe sua movimentação financeira de março.
-              </p>
             </div>
-            <div className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm text-muted-foreground">
-              <CalendarDays size={16} aria-hidden="true" />
-              Março de 2025
-            </div>
+            <p className="text-sm text-muted-foreground">Março de 2025</p>
           </div>
 
           {loading && <DashboardLoading />}
 
           {!loading && error && (
             <Alert variant="destructive">
-              <CircleAlert size={17} aria-hidden="true" />
               <AlertDescription className="flex items-center justify-between gap-4">
                 <span>{error}</span>
-                <Button variant="outline" size="sm" onClick={loadDashboard}>
-                  <RefreshCw size={15} aria-hidden="true" />
-                  Tentar novamente
-                </Button>
+                <Button variant="outline" size="sm" onClick={loadDashboard}>Tentar novamente</Button>
               </AlertDescription>
             </Alert>
           )}
@@ -206,20 +124,14 @@ export function DashboardPlaceholderPage() {
                 <SummaryCard
                   label="Saldo atual"
                   value={data.balance}
-                  icon={WalletCards}
-                  tone="bg-secondary text-primary"
                 />
                 <SummaryCard
                   label="Total de receitas"
                   value={data.income}
-                  icon={ArrowUpRight}
-                  tone="bg-emerald-50 text-emerald-700"
                 />
                 <SummaryCard
                   label="Total de despesas"
                   value={data.expense}
-                  icon={ArrowDownRight}
-                  tone="bg-red-50 text-red-700"
                 />
               </div>
 
@@ -279,19 +191,6 @@ export function DashboardPlaceholderPage() {
                           return (
                             <div key={transaction.id} className="flex items-center justify-between gap-3">
                               <div className="flex min-w-0 items-center gap-3">
-                                <span
-                                  className={`flex size-9 shrink-0 items-center justify-center rounded-full ${
-                                    isIncome
-                                      ? 'bg-emerald-50 text-emerald-700'
-                                      : 'bg-red-50 text-red-700'
-                                  }`}
-                                >
-                                  {isIncome ? (
-                                    <ArrowUpRight size={16} aria-hidden="true" />
-                                  ) : (
-                                    <ArrowDownRight size={16} aria-hidden="true" />
-                                  )}
-                                </span>
                                 <div className="min-w-0">
                                   <p className="truncate text-sm font-medium">{transaction.description}</p>
                                   <p className="text-xs text-muted-foreground">{transaction.date}</p>
@@ -314,8 +213,6 @@ export function DashboardPlaceholderPage() {
               </div>
             </div>
           )}
-        </section>
-      </div>
-    </main>
+    </section>
   )
 }

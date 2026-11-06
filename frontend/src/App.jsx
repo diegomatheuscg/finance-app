@@ -1,11 +1,21 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
+import { AuthenticatedLayout } from '@/components/app/authenticated-layout'
 import { ProtectedRoute, PublicOnlyRoute } from '@/components/auth/route-guards'
+import { WalletProvider } from '@/contexts/wallet-provider'
 import { DashboardPlaceholderPage } from '@/pages/dashboard-placeholder-page'
 import { ForgotPasswordPage } from '@/pages/forgot-password-page'
 import { LoginPage } from '@/pages/login-page'
 import { RegisterPage } from '@/pages/register-page'
 import { ResetPasswordPage } from '@/pages/reset-password-page'
 import { ChangePasswordPage } from '@/pages/change-password-page'
+
+function AuthenticatedProviders() {
+  return (
+    <WalletProvider>
+      <Outlet />
+    </WalletProvider>
+  )
+}
 
 function App() {
   return (
@@ -17,8 +27,14 @@ function App() {
         <Route path="/redefinir-senha/:token" element={<ResetPasswordPage />} />
       </Route>
       <Route element={<ProtectedRoute />}>
-        <Route path="/dashboard" element={<DashboardPlaceholderPage />} />
-        <Route path="/app/perfil/senha" element={<ChangePasswordPage />} />
+        <Route element={<AuthenticatedProviders />}>
+          <Route element={<AuthenticatedLayout requireWallet />}>
+            <Route path="/dashboard" element={<DashboardPlaceholderPage />} />
+          </Route>
+          <Route element={<AuthenticatedLayout />}>
+            <Route path="/app/perfil/senha" element={<ChangePasswordPage />} />
+          </Route>
+        </Route>
       </Route>
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
