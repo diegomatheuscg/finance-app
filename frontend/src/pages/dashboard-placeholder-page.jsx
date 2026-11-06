@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { Brand } from '@/components/auth/auth-layout'
@@ -26,6 +26,9 @@ export function DashboardPlaceholderPage() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
           <Brand />
           <div className="flex items-center gap-4">
+            <Link to="/app/perfil/senha" className="text-sm font-medium text-primary hover:underline">
+              Alterar senha
+            </Link>
             <span className="hidden text-sm text-muted-foreground sm:inline">
               {user?.name || user?.email}
             </span>

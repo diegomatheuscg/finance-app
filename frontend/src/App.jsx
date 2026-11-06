@@ -5,6 +5,7 @@ import { ForgotPasswordPage } from '@/pages/forgot-password-page'
 import { LoginPage } from '@/pages/login-page'
 import { RegisterPage } from '@/pages/register-page'
 import { ResetPasswordPage } from '@/pages/reset-password-page'
+import { ChangePasswordPage } from '@/pages/change-password-page'
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
       </Route>
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<DashboardPlaceholderPage />} />
+        <Route path="/app/perfil/senha" element={<ChangePasswordPage />} />
       </Route>
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/login" replace />} />

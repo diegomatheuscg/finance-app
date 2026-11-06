@@ -50,6 +50,20 @@ export const resetPasswordSchema = z
     path: ['confirmPassword'],
   })
 
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Informe sua senha atual.'),
+    newPassword: z
+      .string()
+      .min(8, 'A nova senha deve ter pelo menos 8 caracteres.')
+      .max(100, 'A nova senha deve ter no máximo 100 caracteres.'),
+    confirmPassword: z.string().min(1, 'Confirme sua nova senha.'),
+  })
+  .refine((values) => values.newPassword === values.confirmPassword, {
+    message: 'As senhas não coincidem.',
+    path: ['confirmPassword'],
+  })
+
 export function getPasswordStrength(password) {
   if (!password) {
     return { label: '', score: 0 }

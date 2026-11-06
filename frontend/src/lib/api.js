@@ -82,3 +82,11 @@ export const authApi = {
     }),
   getCurrentUser: (token) => apiRequest('/api/v1/users/me', { token }),
 }
+
+export const userApi = {
+  updatePassword: (details) =>
+    apiRequest('/api/v1/users/me/password', {
+      method: 'PUT',
+      body: details,
+    }),
+}
