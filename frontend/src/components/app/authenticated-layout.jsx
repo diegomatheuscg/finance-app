@@ -45,6 +45,7 @@ export function AuthenticatedLayout() {
           <Link className="rounded-md px-3 py-2 hover:bg-accent" to="/app/carteiras">Carteiras</Link>
           <Link className="rounded-md px-3 py-2 hover:bg-accent" to="/app/categorias">Categorias</Link>
           <Link className="rounded-md px-3 py-2 hover:bg-accent" to="/app/lancamentos">Lançamentos</Link>
+          <Link className="rounded-md px-3 py-2 hover:bg-accent" to="/app/perfil">Perfil</Link>
           <Link className="rounded-md px-3 py-2 hover:bg-accent" to="/app/perfil/senha">Senha</Link>
         </nav>
         <section className="min-w-0"><Outlet /></section>

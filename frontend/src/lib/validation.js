@@ -64,6 +64,14 @@ export const changePasswordSchema = z
     path: ['confirmPassword'],
   })
 
+export const profileSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, 'Seu nome deve ter pelo menos 2 caracteres.')
+    .max(100, 'Seu nome deve ter no máximo 100 caracteres.'),
+})
+
 export function getPasswordStrength(password) {
   if (!password) {
     return { label: '', score: 0 }

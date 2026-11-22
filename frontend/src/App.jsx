@@ -11,6 +11,7 @@ import { ChangePasswordPage } from '@/pages/change-password-page'
 import { WalletsPage } from '@/pages/wallets-page'
 import { CategoriesPage } from '@/pages/categories-page'
 import { TransactionsPage } from '@/pages/transactions-page'
+import { ProfilePage } from '@/pages/profile-page'
 
 function AuthenticatedProviders() {
   return (
@@ -35,6 +36,7 @@ function App() {
             <Route path="/dashboard" element={<DashboardPlaceholderPage />} />
           </Route>
           <Route element={<AuthenticatedLayout />}>
+            <Route path="/app/perfil" element={<ProfilePage />} />
             <Route path="/app/perfil/senha" element={<ChangePasswordPage />} />
             <Route path="/app/carteiras" element={<WalletsPage />} />
             <Route path="/app/categorias" element={<CategoriesPage />} />

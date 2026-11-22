@@ -23,6 +23,9 @@ function getErrorMessage(payload, fallback) {
       'Este e-mail já está cadastrado. Entre ou use outro e-mail.',
     'Password reset token is invalid or expired':
       'O link de redefinição é inválido ou expirou. Solicite um novo.',
+    'A senha atual está incorreta': 'A senha atual está incorreta.',
+    'A nova senha deve ser diferente da senha atual':
+      'A nova senha deve ser diferente da senha atual.',
   }
 
   return knownMessages[payload?.message] || payload?.message || fallback
@@ -105,7 +108,7 @@ export const userApi = {
     }),
   updatePassword: (details) =>
     apiRequest('/api/v1/users/me/password', {
-      method: 'PUT',
+      method: 'PATCH',
       body: details,
     }),
 }

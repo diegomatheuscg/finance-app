@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ApiError, authApi } from '@/lib/api'
+import { ApiError, authApi, userApi } from '@/lib/api'
 import { AuthContext } from '@/contexts/auth-context'
 
 export function AuthProvider({ children }) {
@@ -98,6 +98,12 @@ export function AuthProvider({ children }) {
     setStatus('anonymous')
   }, [])
 
+  const updateProfile = useCallback(async (details) => {
+    const updatedUser = await userApi.updateMe(details)
+    setUser(updatedUser)
+    return updatedUser
+  }, [])
+
   const value = useMemo(
     () => ({
       status,
@@ -107,8 +113,18 @@ export function AuthProvider({ children }) {
       login,
       logout,
       restoreSession,
+      updateProfile,
     }),
-    [status, token, user, sessionError, login, logout, restoreSession],
+    [
+      status,
+      token,
+      user,
+      sessionError,
+      login,
+      logout,
+      restoreSession,
+      updateProfile,
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

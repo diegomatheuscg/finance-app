@@ -35,7 +35,7 @@ import java.util.UUID;
 public class AuthService {
 
     private static final String GENERIC_RESET_MESSAGE =
-            "If the account exists, password reset instructions will be sent.";
+            "Se este e-mail estiver cadastrado, você receberá as instruções em breve.";
 
     private static final List<DefaultCategory> DEFAULT_CATEGORIES = List.of(
             new DefaultCategory("Salary", TipoTransacao.INCOME, "#16A34A", "wallet"),
@@ -119,8 +119,11 @@ public class AuthService {
 
     @Transactional
     public ForgotPasswordResponse forgotPassword(String requestEmail) {
-        String tokenValue = UUID.randomUUID().toString();
-        usuarioRepository.findByEmail(normalizeEmail(requestEmail)).ifPresent(usuario -> {
+        String debugToken = null;
+        Usuario usuario = usuarioRepository.findByEmail(normalizeEmail(requestEmail)).orElse(null);
+
+        if (usuario != null) {
+            String tokenValue = UUID.randomUUID().toString();
             resetTokenRepository.deleteByUsuarioId(usuario.getId());
             TokenRedefinicaoSenha resetToken = TokenRedefinicaoSenha.builder()
                     .usuario(usuario)
@@ -129,11 +132,14 @@ public class AuthService {
                     .utilizado(false)
                     .build();
             resetTokenRepository.save(resetToken);
-        });
+            if (exposeResetDebugToken) {
+                debugToken = tokenValue;
+            }
+        }
 
         return ForgotPasswordResponse.builder()
                 .message(GENERIC_RESET_MESSAGE)
-                .debugToken(exposeResetDebugToken ? tokenValue : null)
+                .debugToken(debugToken)
                 .build();
     }
 
@@ -152,7 +158,7 @@ public class AuthService {
         resetToken.setUtilizado(true);
         resetTokenRepository.save(resetToken);
 
-        return new MensagemResponse("Password has been reset successfully");
+        return new MensagemResponse("Senha redefinida com sucesso");
     }
 
     private String normalizeEmail(String email) {
