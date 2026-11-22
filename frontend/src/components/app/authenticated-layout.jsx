@@ -42,11 +42,11 @@ export function AuthenticatedLayout() {
       <div className="mx-auto grid max-w-7xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[200px_1fr]">
         <nav className="flex gap-2 text-sm lg:grid lg:content-start">
           <Link className="rounded-md px-3 py-2 hover:bg-accent" to="/dashboard">Dashboard</Link>
-          <Link className="rounded-md px-3 py-2 hover:bg-accent" to="/app/carteiras">Carteiras</Link>
-          <Link className="rounded-md px-3 py-2 hover:bg-accent" to="/app/categorias">Categorias</Link>
-          <Link className="rounded-md px-3 py-2 hover:bg-accent" to="/app/lancamentos">Lançamentos</Link>
-          <Link className="rounded-md px-3 py-2 hover:bg-accent" to="/app/perfil">Perfil</Link>
-          <Link className="rounded-md px-3 py-2 hover:bg-accent" to="/app/perfil/senha">Senha</Link>
+          <Link className="rounded-md px-3 py-2 hover:bg-accent" to="/carteiras">Carteiras</Link>
+          <Link className="rounded-md px-3 py-2 hover:bg-accent" to="/categorias">Categorias</Link>
+          <Link className="rounded-md px-3 py-2 hover:bg-accent" to="/lancamentos">Lançamentos</Link>
+          <Link className="rounded-md px-3 py-2 hover:bg-accent" to="/perfil">Perfil</Link>
+          <Link className="rounded-md px-3 py-2 hover:bg-accent" to="/perfil/senha">Senha</Link>
         </nav>
         <section className="min-w-0"><Outlet /></section>
       </div>

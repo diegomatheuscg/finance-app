@@ -36,11 +36,11 @@ function App() {
             <Route path="/dashboard" element={<DashboardPlaceholderPage />} />
           </Route>
           <Route element={<AuthenticatedLayout />}>
-            <Route path="/app/perfil" element={<ProfilePage />} />
-            <Route path="/app/perfil/senha" element={<ChangePasswordPage />} />
-            <Route path="/app/carteiras" element={<WalletsPage />} />
-            <Route path="/app/categorias" element={<CategoriesPage />} />
-            <Route path="/app/lancamentos" element={<TransactionsPage />} />
+            <Route path="/perfil" element={<ProfilePage />} />
+            <Route path="/perfil/senha" element={<ChangePasswordPage />} />
+            <Route path="/carteiras" element={<WalletsPage />} />
+            <Route path="/categorias" element={<CategoriesPage />} />
+            <Route path="/lancamentos" element={<TransactionsPage />} />
           </Route>
         </Route>
       </Route>
