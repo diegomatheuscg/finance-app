@@ -104,10 +104,10 @@ public class AuthService {
     public LoginResponse login(LoginRequest request) {
         String email = normalizeEmail(request.getEmail());
         Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new UnauthenticatedException("Invalid email or password"));
+                .orElseThrow(() -> new UnauthenticatedException("E-mail ou senha inválidos"));
 
         if (!passwordEncoder.matches(request.getPassword(), usuario.getSenhaCriptografada())) {
-            throw new UnauthenticatedException("Invalid email or password");
+            throw new UnauthenticatedException("E-mail ou senha inválidos");
         }
 
         return LoginResponse.builder()
@@ -146,10 +146,10 @@ public class AuthService {
     @Transactional
     public MensagemResponse resetPassword(ResetPasswordRequest request) {
         TokenRedefinicaoSenha resetToken = resetTokenRepository.findByToken(request.getToken())
-                .orElseThrow(() -> new BusinessException("Password reset token is invalid or expired"));
+                .orElseThrow(() -> new BusinessException("O token de redefinição é inválido ou expirou"));
 
         if (resetToken.isUtilizado() || !resetToken.getExpiraEm().isAfter(LocalDateTime.now())) {
-            throw new BusinessException("Password reset token is invalid or expired");
+            throw new BusinessException("O token de redefinição é inválido ou expirou");
         }
 
         Usuario usuario = resetToken.getUsuario();

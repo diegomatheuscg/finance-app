@@ -19,9 +19,12 @@ function getErrorMessage(payload, fallback) {
 
   const knownMessages = {
     'Invalid email or password': 'E-mail ou senha incorretos.',
+    'E-mail ou senha inválidos': 'E-mail ou senha incorretos.',
     'An account with this email already exists':
       'Este e-mail já está cadastrado. Entre ou use outro e-mail.',
     'Password reset token is invalid or expired':
+      'O link de redefinição é inválido ou expirou. Solicite um novo.',
+    'O token de redefinição é inválido ou expirou':
       'O link de redefinição é inválido ou expirou. Solicite um novo.',
     'A senha atual está incorreta': 'A senha atual está incorreta.',
     'A nova senha deve ser diferente da senha atual':
