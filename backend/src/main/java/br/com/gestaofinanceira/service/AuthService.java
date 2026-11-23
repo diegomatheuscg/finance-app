@@ -19,7 +19,6 @@ import br.com.gestaofinanceira.repository.CategoriaRepository;
 import br.com.gestaofinanceira.repository.TokenRedefinicaoSenhaRepository;
 import br.com.gestaofinanceira.repository.UsuarioRepository;
 import br.com.gestaofinanceira.security.JwtTokenProvider;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,7 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -52,6 +50,7 @@ public class AuthService {
     private final TokenRedefinicaoSenhaRepository resetTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final EmailService emailService;
     private final boolean exposeResetDebugToken;
 
     public AuthService(
@@ -60,34 +59,15 @@ public class AuthService {
             TokenRedefinicaoSenhaRepository resetTokenRepository,
             PasswordEncoder passwordEncoder,
             JwtTokenProvider jwtTokenProvider,
+            EmailService emailService,
             @Value("${app.password-reset.expose-debug-token:false}") boolean exposeResetDebugToken) {
         this.usuarioRepository = usuarioRepository;
         this.categoriaRepository = categoriaRepository;
         this.resetTokenRepository = resetTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.emailService = emailService;
         this.exposeResetDebugToken = exposeResetDebugToken;
-    }
-
-    @PostConstruct
-    @Transactional
-    public void normalizeDefaultCategoryNames() {
-        Map<String, String> portugueseNames = Map.of(
-                "Salary", "Salário",
-                "Other income", "Outras receitas",
-                "Food", "Alimentação",
-                "Transport", "Transporte",
-                "Housing", "Moradia",
-                "Health", "Saúde");
-
-        List<Categoria> outdatedCategories = categoriaRepository.findAll().stream()
-                .filter(categoria -> portugueseNames.containsKey(categoria.getNome()))
-                .peek(categoria -> categoria.setNome(portugueseNames.get(categoria.getNome())))
-                .toList();
-
-        if (!outdatedCategories.isEmpty()) {
-            categoriaRepository.saveAll(outdatedCategories);
-        }
     }
 
     @Transactional
@@ -120,6 +100,7 @@ public class AuthService {
                         .build())
                 .toList();
         categoriaRepository.saveAll(categoriasPadrao);
+        emailService.sendWelcomeEmail(usuario.getEmail(), usuario.getNome());
 
         return toUserResponse(usuario);
     }
@@ -158,6 +139,7 @@ public class AuthService {
             if (exposeResetDebugToken) {
                 debugToken = tokenValue;
             }
+            emailService.sendPasswordResetEmail(usuario.getEmail(), usuario.getNome(), tokenValue);
         }
 
         return ForgotPasswordResponse.builder()

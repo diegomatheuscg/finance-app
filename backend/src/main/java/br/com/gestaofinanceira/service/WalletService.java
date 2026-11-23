@@ -30,14 +30,17 @@ public class WalletService {
     private final CarteiraRepository carteiraRepository;
     private final CarteiraMembroRepository membroRepository;
     private final UsuarioRepository usuarioRepository;
+    private final EmailService emailService;
 
     public WalletService(
             CarteiraRepository carteiraRepository,
             CarteiraMembroRepository membroRepository,
-            UsuarioRepository usuarioRepository) {
+            UsuarioRepository usuarioRepository,
+            EmailService emailService) {
         this.carteiraRepository = carteiraRepository;
         this.membroRepository = membroRepository;
         this.usuarioRepository = usuarioRepository;
+        this.emailService = emailService;
     }
 
     public List<WalletResponse> list(Long userId) {
@@ -119,7 +122,14 @@ public class WalletService {
                 .usuario(usuario)
                 .papel(request.getRole())
                 .build();
-        return toMemberResponse(membroRepository.save(membro));
+        CarteiraMembro savedMember = membroRepository.save(membro);
+        emailService.sendWalletMemberEmail(
+                usuario.getEmail(),
+                usuario.getNome(),
+                carteira.getNome(),
+                membro.getPapel().name(),
+                carteira.getDono().getNome());
+        return toMemberResponse(savedMember);
     }
 
     @Transactional
