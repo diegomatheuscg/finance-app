@@ -34,8 +34,8 @@ export function AuthenticatedLayout() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
-      <header className="border-b bg-card">
+    <main className="flex h-screen flex-col overflow-hidden bg-background">
+      <header className="shrink-0 border-b bg-card">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-8">
           <Link to="/dashboard" className="text-lg font-bold tracking-tight">Finance App</Link>
           <div className="flex items-center gap-4 text-sm">
@@ -61,7 +61,7 @@ export function AuthenticatedLayout() {
           </div>
         </div>
       </header>
-      <div className="mx-auto grid min-h-[calc(100vh-73px)] max-w-7xl gap-8 px-5 py-8 sm:px-8 md:grid-cols-[200px_minmax(0,1fr)]">
+      <div className="mx-auto grid min-h-0 w-full max-w-7xl flex-1 grid-rows-[auto_minmax(0,1fr)] gap-4 overflow-hidden px-5 py-4 sm:px-8 md:grid-cols-[200px_minmax(0,1fr)] md:grid-rows-1 md:gap-8 md:py-8">
         <nav className="flex flex-wrap items-start gap-2 text-sm md:grid md:content-start md:border-r md:border-border/70 md:pr-5">
           {navigationItems.map(({ to, label, icon: Icon }) => (
             <NavLink
@@ -81,7 +81,9 @@ export function AuthenticatedLayout() {
             </NavLink>
           ))}
         </nav>
-        <section className="min-w-0 w-full max-w-6xl"><Outlet /></section>
+        <section className="min-h-0 min-w-0 w-full max-w-6xl overflow-y-auto overscroll-contain">
+          <Outlet />
+        </section>
       </div>
     </main>
   )
