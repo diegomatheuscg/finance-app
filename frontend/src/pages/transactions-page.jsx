@@ -97,7 +97,7 @@ function TransactionModal({ categories, transaction, onClose, onSaved, walletId 
 }
 
 export function TransactionsPage() {
-  const { activeWallet, activeWalletId } = useWallet()
+  const { activeWallet, activeWalletId, transactionUpdateKey } = useWallet()
   const [transactions, setTransactions] = useState([])
   const [categories, setCategories] = useState([])
   const [pageData, setPageData] = useState({ number: 0, totalPages: 0, totalElements: 0 })
@@ -147,7 +147,7 @@ export function TransactionsPage() {
       loadTransactions()
     }, 0)
     return () => clearTimeout(timer)
-  }, [loadTransactions])
+  }, [loadTransactions, transactionUpdateKey])
 
   async function handleDelete() {
     if (!transactionToDelete) return

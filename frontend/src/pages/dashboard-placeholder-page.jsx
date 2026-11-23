@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Link } from 'react-router-dom'
 import { useWallet } from '@/contexts/wallet-context'
-import { dashboardApi, transactionApi } from '@/lib/api'
+import { dashboardApi, reportApi, transactionApi } from '@/lib/api'
 
 const currencyFormatter = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
@@ -85,10 +85,16 @@ function formatLocalDate(value) {
 }
 
 export function DashboardPlaceholderPage() {
-  const { activeWallet, status: walletStatus } = useWallet()
+  const {
+    activeWallet,
+    status: walletStatus,
+    transactionUpdateKey,
+  } = useWallet()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [reportError, setReportError] = useState('')
+  const [exportingReport, setExportingReport] = useState(false)
   const [period, setPeriod] = useState(currentMonthPeriod)
   const periodError = period.startDate > period.endDate
     ? 'A data inicial não pode ser posterior à data final.'
@@ -148,7 +154,19 @@ export function DashboardPlaceholderPage() {
   useEffect(() => {
     const timer = setTimeout(loadDashboard, 0)
     return () => clearTimeout(timer)
-  }, [loadDashboard])
+  }, [loadDashboard, transactionUpdateKey])
+
+  async function exportReport() {
+    setReportError('')
+    setExportingReport(true)
+    try {
+      await reportApi.downloadSummary(activeWallet.id, period)
+    } catch (downloadError) {
+      setReportError(downloadError.message || 'Não foi possível baixar o relatório.')
+    } finally {
+      setExportingReport(false)
+    }
+  }
 
   const hasTransactions = Boolean(data?.recentTransactions?.length)
   const chartData = useMemo(() => data?.monthly || [], [data])
@@ -184,8 +202,21 @@ export function DashboardPlaceholderPage() {
                   }))}
                 />
               </label>
+              <Button
+                variant="outline"
+                onClick={exportReport}
+                disabled={!activeWallet || loading || Boolean(periodError) || exportingReport}
+              >
+                {exportingReport ? 'Gerando PDF...' : 'Exportar PDF'}
+              </Button>
             </div>
           </div>
+
+          {reportError && (
+            <Alert variant="destructive">
+              <AlertDescription>{reportError}</AlertDescription>
+            </Alert>
+          )}
 
           {!loading && walletStatus === 'ready' && !activeWallet && (
             <div className="grid gap-3 rounded-xl border bg-card p-5">

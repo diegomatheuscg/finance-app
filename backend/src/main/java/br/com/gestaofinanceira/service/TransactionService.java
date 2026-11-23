@@ -8,6 +8,7 @@ import br.com.gestaofinanceira.entity.Categoria;
 import br.com.gestaofinanceira.entity.Transacao;
 import br.com.gestaofinanceira.entity.Usuario;
 import br.com.gestaofinanceira.entity.enums.PapelCarteira;
+import br.com.gestaofinanceira.event.WalletTransactionChanged;
 import br.com.gestaofinanceira.exception.BusinessException;
 import br.com.gestaofinanceira.exception.ResourceNotFoundException;
 import br.com.gestaofinanceira.repository.CarteiraMembroRepository;
@@ -15,6 +16,7 @@ import br.com.gestaofinanceira.repository.CarteiraRepository;
 import br.com.gestaofinanceira.repository.CategoriaRepository;
 import br.com.gestaofinanceira.repository.TransacaoRepository;
 import br.com.gestaofinanceira.repository.UsuarioRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -35,18 +37,21 @@ public class TransactionService {
     private final CarteiraMembroRepository membroRepository;
     private final CategoriaRepository categoriaRepository;
     private final UsuarioRepository usuarioRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public TransactionService(
             TransacaoRepository transacaoRepository,
             CarteiraRepository carteiraRepository,
             CarteiraMembroRepository membroRepository,
             CategoriaRepository categoriaRepository,
-            UsuarioRepository usuarioRepository) {
+            UsuarioRepository usuarioRepository,
+            ApplicationEventPublisher eventPublisher) {
         this.transacaoRepository = transacaoRepository;
         this.carteiraRepository = carteiraRepository;
         this.membroRepository = membroRepository;
         this.categoriaRepository = categoriaRepository;
         this.usuarioRepository = usuarioRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     public Page<TransactionResponse> list(
@@ -107,7 +112,10 @@ public class TransactionService {
                 .descricao(normalizeOptional(request.getDescription()))
                 .data(request.getDate())
                 .build();
-        return toResponse(transacaoRepository.save(transacao));
+        Transacao criada = transacaoRepository.save(transacao);
+        eventPublisher.publishEvent(new WalletTransactionChanged(
+                walletId, WalletTransactionChanged.Action.CREATED, criada.getId()));
+        return toResponse(criada);
     }
 
     @Transactional
@@ -120,13 +128,19 @@ public class TransactionService {
         transacao.setValor(request.getAmount());
         transacao.setDescricao(normalizeOptional(request.getDescription()));
         transacao.setData(request.getDate());
-        return toResponse(transacaoRepository.save(transacao));
+        Transacao atualizada = transacaoRepository.save(transacao);
+        eventPublisher.publishEvent(new WalletTransactionChanged(
+                walletId, WalletTransactionChanged.Action.UPDATED, atualizada.getId()));
+        return toResponse(atualizada);
     }
 
     @Transactional
     public void delete(Long userId, Long walletId, Long transactionId) {
         findWalletForEditor(walletId, userId);
-        transacaoRepository.delete(findTransaction(walletId, transactionId));
+        Transacao transacao = findTransaction(walletId, transactionId);
+        transacaoRepository.delete(transacao);
+        eventPublisher.publishEvent(new WalletTransactionChanged(
+                walletId, WalletTransactionChanged.Action.DELETED, transactionId));
     }
 
     private Carteira findWalletForMember(Long walletId, Long userId) {
