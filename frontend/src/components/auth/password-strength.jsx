@@ -23,8 +23,7 @@ export function PasswordStrength({ password }) {
         ))}
       </div>
       <p className="text-xs text-muted-foreground">
-        Força da senha: <span className="font-medium text-foreground">{label}</span>
-        {' · '}use 8 caracteres, números, símbolos e letras maiúsculas para fortalecê-la.
+        Força: <span className="font-medium text-foreground">{label}</span>
       </p>
     </div>
   )

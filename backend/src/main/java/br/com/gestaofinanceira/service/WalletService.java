@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.ArrayList;
 
 @Service
 @Transactional(readOnly = true)
@@ -79,11 +80,21 @@ public class WalletService {
     }
 
     public List<WalletMemberResponse> listMembers(Long userId, Long walletId) {
-        findWalletForMember(walletId, userId);
-        return membroRepository.findByCarteiraId(walletId)
+        Carteira carteira = findWalletForMember(walletId, userId);
+        List<WalletMemberResponse> members = new ArrayList<>();
+        members.add(WalletMemberResponse.builder()
+                .id(null)
+                .userId(carteira.getDono().getId())
+                .name(carteira.getDono().getNome())
+                .email(carteira.getDono().getEmail())
+                .role(PapelCarteira.OWNER)
+                .joinedAt(carteira.getCriadoEm())
+                .build());
+        members.addAll(membroRepository.findByCarteiraId(walletId)
                 .stream()
                 .map(this::toMemberResponse)
-                .toList();
+                .toList());
+        return members;
     }
 
     @Transactional
@@ -130,6 +141,17 @@ public class WalletService {
         findWalletOwnedBy(walletId, userId);
         CarteiraMembro membro = membroRepository.findByCarteiraIdAndUsuarioId(walletId, memberUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Membro não encontrado"));
+        membroRepository.delete(membro);
+    }
+
+    @Transactional
+    public void leave(Long userId, Long walletId) {
+        Carteira carteira = findWallet(walletId);
+        if (isOwner(carteira, userId)) {
+            throw new BusinessException("O dono não pode sair da própria carteira");
+        }
+        CarteiraMembro membro = membroRepository.findByCarteiraIdAndUsuarioId(walletId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Você não é membro desta carteira"));
         membroRepository.delete(membro);
     }
 

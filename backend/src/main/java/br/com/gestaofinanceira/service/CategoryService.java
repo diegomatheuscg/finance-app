@@ -3,6 +3,7 @@ package br.com.gestaofinanceira.service;
 import br.com.gestaofinanceira.dto.category.CategoryRequest;
 import br.com.gestaofinanceira.dto.category.CategoryResponse;
 import br.com.gestaofinanceira.entity.Categoria;
+import br.com.gestaofinanceira.entity.Transacao;
 import br.com.gestaofinanceira.entity.Usuario;
 import br.com.gestaofinanceira.entity.enums.TipoTransacao;
 import br.com.gestaofinanceira.exception.BusinessException;
@@ -58,6 +59,9 @@ public class CategoryService {
     @Transactional
     public CategoryResponse update(Long userId, Long categoryId, CategoryRequest request) {
         Categoria categoria = findOwnedCategory(userId, categoryId);
+        if (categoria.getTipo() != request.getType()) {
+            clearCategoryFromTransactions(categoria);
+        }
         categoria.setNome(request.getName().trim());
         categoria.setTipo(request.getType());
         categoria.setCor(normalizeOptional(request.getColor()));
@@ -91,5 +95,15 @@ public class CategoryService {
 
     private String normalizeOptional(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private void clearCategoryFromTransactions(Categoria categoria) {
+        List<Transacao> transacoes = transacaoRepository.findAllByCategoriaId(categoria.getId());
+        for (Transacao transacao : transacoes) {
+            transacao.setCategoria(null);
+        }
+        if (!transacoes.isEmpty()) {
+            transacaoRepository.saveAll(transacoes);
+        }
     }
 }

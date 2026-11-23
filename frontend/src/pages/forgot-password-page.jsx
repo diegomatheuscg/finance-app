@@ -40,9 +40,9 @@ export function ForgotPasswordPage() {
         <MailCheck size={23} aria-hidden="true" />
       </div>
       <div className="mb-7">
-        <h2 className="text-3xl font-semibold tracking-tight">Recuperar senha</h2>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Informe seu e-mail e enviaremos as instruções para redefinir sua senha.
+        <h2 className="text-2xl font-semibold tracking-tight">Recuperar senha</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Informe o e-mail cadastrado.
         </p>
       </div>
 

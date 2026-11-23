@@ -20,5 +20,7 @@ public interface TransacaoRepository extends JpaRepository<Transacao, Long>, Jpa
 
     boolean existsByCategoriaId(Long categoriaId);
 
+    List<Transacao> findAllByCategoriaId(Long categoriaId);
+
     List<Transacao> findByCarteiraIdAndDataBetween(Long carteiraId, LocalDate dataInicio, LocalDate dataFim);
 }

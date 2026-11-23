@@ -12,7 +12,7 @@ export class ApiError extends Error {
 function getErrorMessage(payload, fallback) {
   if (Array.isArray(payload?.errors) && payload.errors.length > 0) {
     return payload.errors
-      .map((fieldError) => fieldError.message)
+      .map((fieldError) => fieldError.message || fieldError.mensagem)
       .filter(Boolean)
       .join('. ')
   }
@@ -145,6 +145,10 @@ export const walletApi = {
       }),
     removeMember: (walletId, memberUserId) =>
       apiRequest(`/api/v1/wallets/${walletId}/members/${memberUserId}`, {
+        method: 'DELETE',
+      }),
+    leave: (walletId) =>
+      apiRequest(`/api/v1/wallets/${walletId}/members/me`, {
         method: 'DELETE',
       }),
 }

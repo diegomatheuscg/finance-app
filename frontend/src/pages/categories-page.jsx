@@ -1,12 +1,57 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Plus } from 'lucide-react'
+import {
+  Car,
+  HeartPulse,
+  House,
+  Plus,
+  ShoppingBasket,
+  Utensils,
+  WalletCards,
+  CircleDollarSign,
+} from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { categoryApi } from '@/lib/api'
 
+const categoryColors = [
+  { value: '#16A34A', label: 'Verde' },
+  { value: '#22C55E', label: 'Verde claro' },
+  { value: '#F97316', label: 'Laranja' },
+  { value: '#3B82F6', label: 'Azul' },
+  { value: '#8B5CF6', label: 'Roxo' },
+  { value: '#EF4444', label: 'Vermelho' },
+  { value: '#64748B', label: 'Cinza' },
+]
+
+const categoryIcons = [
+  { value: 'wallet', label: 'Carteira', icon: WalletCards },
+  { value: 'plus', label: 'Receita', icon: CircleDollarSign },
+  { value: 'utensils', label: 'Alimentação', icon: Utensils },
+  { value: 'shopping', label: 'Compras', icon: ShoppingBasket },
+  { value: 'car', label: 'Transporte', icon: Car },
+  { value: 'home', label: 'Moradia', icon: House },
+  { value: 'heart', label: 'Saúde', icon: HeartPulse },
+]
+
+function CategoryIcon({ icon, color }) {
+  const option = categoryIcons.find((item) => item.value === icon)
+  const Icon = option?.icon || WalletCards
+  return (
+    <span
+      className="flex size-8 items-center justify-center rounded-md"
+      style={{ backgroundColor: `${color || '#64748B'}20`, color: color || '#64748B' }}
+      aria-hidden="true"
+    >
+      <Icon size={16} strokeWidth={1.8} />
+    </span>
+  )
+}
+
 function CategoryModal({ category, onClose, onSaved }) {
   const [name, setName] = useState(category?.name || '')
   const [type, setType] = useState(category?.type || 'EXPENSE')
+  const [color, setColor] = useState(category?.color || '#64748B')
+  const [icon, setIcon] = useState(category?.icon || 'wallet')
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -16,7 +61,16 @@ function CategoryModal({ category, onClose, onSaved }) {
     setIsSubmitting(true)
 
     try {
-      const details = { name: name.trim(), type, color: null, icon: null }
+      if (category && category.type !== type) {
+        const confirmed = window.confirm(
+          'Ao alterar o tipo desta categoria, os lançamentos vinculados ficarão sem categoria. Continuar?',
+        )
+        if (!confirmed) {
+          setIsSubmitting(false)
+          return
+        }
+      }
+      const details = { name: name.trim(), type, color, icon }
       if (category) {
         await categoryApi.update(category.id, details)
       } else {
@@ -72,6 +126,58 @@ function CategoryModal({ category, onClose, onSaved }) {
               <option value="INCOME">Receita</option>
             </select>
           </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <fieldset className="grid gap-2 text-sm font-medium">
+              <legend>Cor</legend>
+              <div className="flex flex-wrap gap-2">
+                {categoryColors.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={`flex size-9 items-center justify-center rounded-md border transition ${
+                      color === option.value
+                        ? 'border-foreground ring-2 ring-foreground/20'
+                        : 'border-border'
+                    }`}
+                    style={{ backgroundColor: option.value }}
+                    title={option.label}
+                    aria-label={`Cor ${option.label}`}
+                    aria-pressed={color === option.value}
+                    onClick={() => setColor(option.value)}
+                  >
+                    {color === option.value && (
+                      <span className="size-2 rounded-full bg-white shadow-sm" aria-hidden="true" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+            <fieldset className="grid gap-2 text-sm font-medium">
+              <legend>Ícone</legend>
+              <div className="grid grid-cols-4 gap-2">
+                {categoryIcons.map((option) => {
+                  const Icon = option.icon
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={`flex h-9 items-center justify-center rounded-md border transition ${
+                        icon === option.value
+                          ? 'border-foreground bg-accent text-accent-foreground'
+                          : 'border-border bg-background'
+                      }`}
+                      title={option.label}
+                      aria-label={`Ícone ${option.label}`}
+                      aria-pressed={icon === option.value}
+                      onClick={() => setIcon(option.value)}
+                    >
+                      <Icon size={16} strokeWidth={1.8} aria-hidden="true" />
+                    </button>
+                  )
+                })}
+              </div>
+            </fieldset>
+          </div>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Salvando...' : category ? 'Salvar alterações' : 'Criar categoria'}
           </Button>
@@ -170,7 +276,10 @@ export function CategoriesPage() {
                 )}
                 {typeCategories.map((category) => (
                   <div className="flex items-center justify-between gap-3 rounded-md border p-3" key={category.id}>
-                    <span className="text-sm font-medium">{category.name}</span>
+                    <div className="flex items-center gap-3">
+                      <CategoryIcon icon={category.icon} color={category.color} />
+                      <span className="text-sm font-medium">{category.name}</span>
+                    </div>
                     <div className="flex gap-2">
                       <Button
                         type="button"

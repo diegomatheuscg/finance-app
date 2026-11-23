@@ -46,11 +46,7 @@ export function RegisterPage() {
   return (
     <AuthLayout>
       <div className="mb-6">
-        <p className="mb-2 text-sm font-medium text-primary">Comece por aqui</p>
-        <h2 className="text-3xl font-semibold tracking-tight">Crie sua conta</h2>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Organize seu dinheiro com mais tranquilidade.
-        </p>
+        <h2 className="text-2xl font-semibold tracking-tight">Criar conta</h2>
       </div>
 
       {serverError && (
@@ -63,7 +59,7 @@ export function RegisterPage() {
         <AuthField
           label="Nome"
           autoComplete="name"
-          placeholder="Como podemos te chamar?"
+          placeholder="Nome completo"
           error={errors.name?.message}
           {...register('name')}
         />
@@ -80,7 +76,7 @@ export function RegisterPage() {
             label="Senha"
             type="password"
             autoComplete="new-password"
-            placeholder="Crie uma senha segura"
+            placeholder="Mínimo 8 caracteres"
             error={errors.password?.message}
             {...register('password')}
           />

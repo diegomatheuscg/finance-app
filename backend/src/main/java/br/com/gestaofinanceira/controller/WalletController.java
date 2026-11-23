@@ -108,4 +108,12 @@ public class WalletController {
         walletService.removeMember(user.userId(), walletId, memberUserId);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/{walletId}/members/me")
+    public ResponseEntity<Void> leave(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long walletId) {
+        walletService.leave(user.userId(), walletId);
+        return ResponseEntity.noContent().build();
+    }
 }

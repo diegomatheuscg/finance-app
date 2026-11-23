@@ -5,11 +5,13 @@ import { ApiError, walletApi } from '@/lib/api'
 import { useAuth } from '@/hooks/use-auth'
 
 export function WalletProvider({ children }) {
-  const { logout } = useAuth()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const walletPreferenceKey = user?.id ? `activeWalletId:${user.id}` : 'activeWalletId'
   const [wallets, setWallets] = useState([])
   const [activeWalletId, setActiveWalletId] = useState(() => (
-    window.localStorage.getItem('activeWalletId')
+    window.localStorage.getItem(`activeWalletId:${user?.id}`)
+      || window.localStorage.getItem('activeWalletId')
   ))
   const [status, setStatus] = useState('loading')
   const [error, setError] = useState('')
@@ -33,8 +35,9 @@ export function WalletProvider({ children }) {
           || null
 
         if (nextId) {
-          window.localStorage.setItem('activeWalletId', String(nextId))
+          window.localStorage.setItem(walletPreferenceKey, String(nextId))
         } else {
+          window.localStorage.removeItem(walletPreferenceKey)
           window.localStorage.removeItem('activeWalletId')
         }
 
@@ -52,7 +55,7 @@ export function WalletProvider({ children }) {
       setError(loadError.message || 'Não foi possível carregar as carteiras.')
       setStatus('error')
     }
-  }, [logout, navigate])
+  }, [logout, navigate, walletPreferenceKey])
 
   useEffect(() => {
     const timer = setTimeout(loadWallets, 0)
@@ -65,8 +68,8 @@ export function WalletProvider({ children }) {
 
     const nextId = String(selectedWallet.id)
     setActiveWalletId(nextId)
-    window.localStorage.setItem('activeWalletId', nextId)
-  }, [wallets])
+    window.localStorage.setItem(walletPreferenceKey, nextId)
+  }, [walletPreferenceKey, wallets])
 
   const value = useMemo(() => ({
     wallets,

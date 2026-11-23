@@ -19,6 +19,7 @@ import br.com.gestaofinanceira.repository.CategoriaRepository;
 import br.com.gestaofinanceira.repository.TokenRedefinicaoSenhaRepository;
 import br.com.gestaofinanceira.repository.UsuarioRepository;
 import br.com.gestaofinanceira.security.JwtTokenProvider;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -38,12 +40,12 @@ public class AuthService {
             "Se este e-mail estiver cadastrado, você receberá as instruções em breve.";
 
     private static final List<DefaultCategory> DEFAULT_CATEGORIES = List.of(
-            new DefaultCategory("Salary", TipoTransacao.INCOME, "#16A34A", "wallet"),
-            new DefaultCategory("Other income", TipoTransacao.INCOME, "#22C55E", "plus"),
-            new DefaultCategory("Food", TipoTransacao.EXPENSE, "#F97316", "utensils"),
-            new DefaultCategory("Transport", TipoTransacao.EXPENSE, "#3B82F6", "car"),
-            new DefaultCategory("Housing", TipoTransacao.EXPENSE, "#8B5CF6", "home"),
-            new DefaultCategory("Health", TipoTransacao.EXPENSE, "#EF4444", "heart"));
+            new DefaultCategory("Salário", TipoTransacao.INCOME, "#16A34A", "wallet"),
+            new DefaultCategory("Outras receitas", TipoTransacao.INCOME, "#22C55E", "plus"),
+            new DefaultCategory("Alimentação", TipoTransacao.EXPENSE, "#F97316", "utensils"),
+            new DefaultCategory("Transporte", TipoTransacao.EXPENSE, "#3B82F6", "car"),
+            new DefaultCategory("Moradia", TipoTransacao.EXPENSE, "#8B5CF6", "home"),
+            new DefaultCategory("Saúde", TipoTransacao.EXPENSE, "#EF4444", "heart"));
 
     private final UsuarioRepository usuarioRepository;
     private final CategoriaRepository categoriaRepository;
@@ -65,6 +67,27 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
         this.exposeResetDebugToken = exposeResetDebugToken;
+    }
+
+    @PostConstruct
+    @Transactional
+    public void normalizeDefaultCategoryNames() {
+        Map<String, String> portugueseNames = Map.of(
+                "Salary", "Salário",
+                "Other income", "Outras receitas",
+                "Food", "Alimentação",
+                "Transport", "Transporte",
+                "Housing", "Moradia",
+                "Health", "Saúde");
+
+        List<Categoria> outdatedCategories = categoriaRepository.findAll().stream()
+                .filter(categoria -> portugueseNames.containsKey(categoria.getNome()))
+                .peek(categoria -> categoria.setNome(portugueseNames.get(categoria.getNome())))
+                .toList();
+
+        if (!outdatedCategories.isEmpty()) {
+            categoriaRepository.saveAll(outdatedCategories);
+        }
     }
 
     @Transactional

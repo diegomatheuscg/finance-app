@@ -40,11 +40,7 @@ export function LoginPage() {
   return (
     <AuthLayout>
       <div className="mb-8">
-        <p className="mb-2 text-sm font-medium text-primary">Bem-vindo de volta</p>
-        <h2 className="text-3xl font-semibold tracking-tight">Acesse sua conta</h2>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Entre para acompanhar sua vida financeira.
-        </p>
+        <h2 className="text-2xl font-semibold tracking-tight">Entrar</h2>
       </div>
 
       {successMessage && (
@@ -80,7 +76,7 @@ export function LoginPage() {
             label="Senha"
             type="password"
             autoComplete="current-password"
-            placeholder="Digite sua senha"
+            placeholder="Senha"
             error={errors.password?.message}
             {...register('password')}
           />

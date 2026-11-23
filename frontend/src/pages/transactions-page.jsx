@@ -10,7 +10,13 @@ function TransactionModal({ categories, transaction, onClose, onSaved, walletId 
   const [type, setType] = useState(transaction?.type || 'EXPENSE')
   const [amount, setAmount] = useState(transaction?.amount || '')
   const [description, setDescription] = useState(transaction?.description || '')
-  const [date, setDate] = useState(transaction?.date || new Date().toISOString().slice(0, 10))
+  const today = new Date()
+  const todayLocal = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, '0'),
+    String(today.getDate()).padStart(2, '0'),
+  ].join('-')
+  const [date, setDate] = useState(transaction?.date || todayLocal)
   const [categoryId, setCategoryId] = useState(transaction?.categoryId || '')
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -69,7 +75,7 @@ function TransactionModal({ categories, transaction, onClose, onSaved, walletId 
           </label>
           <label className="grid gap-1.5 text-sm font-medium">
             Data
-            <input className="h-10 rounded-md border bg-background px-3 font-normal" type="date" value={date} onChange={(event) => setDate(event.target.value)} required />
+            <input className="h-10 rounded-md border bg-background px-3 font-normal" type="date" max={todayLocal} value={date} onChange={(event) => setDate(event.target.value)} required />
           </label>
           <label className="grid gap-1.5 text-sm font-medium">
             Categoria

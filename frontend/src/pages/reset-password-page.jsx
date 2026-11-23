@@ -46,10 +46,7 @@ export function ResetPasswordPage() {
         <LockKeyhole size={22} aria-hidden="true" />
       </div>
       <div className="mb-6">
-        <h2 className="text-3xl font-semibold tracking-tight">Crie uma nova senha</h2>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Escolha uma senha segura para voltar a acessar sua conta.
-        </p>
+        <h2 className="text-2xl font-semibold tracking-tight">Redefinir senha</h2>
       </div>
 
       {!token ? (
@@ -69,7 +66,7 @@ export function ResetPasswordPage() {
                 label="Nova senha"
                 type="password"
                 autoComplete="new-password"
-                placeholder="Digite sua nova senha"
+                placeholder="Mínimo 8 caracteres"
                 error={errors.password?.message}
                 {...register('password')}
               />

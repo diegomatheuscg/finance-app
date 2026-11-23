@@ -34,8 +34,6 @@ function App() {
         <Route element={<AuthenticatedProviders />}>
           <Route element={<AuthenticatedLayout />}>
             <Route path="/dashboard" element={<DashboardPlaceholderPage />} />
-          </Route>
-          <Route element={<AuthenticatedLayout />}>
             <Route path="/perfil" element={<ProfilePage />} />
             <Route path="/perfil/senha" element={<ChangePasswordPage />} />
             <Route path="/carteiras" element={<WalletsPage />} />
