@@ -107,6 +107,7 @@ export function WalletsPage() {
   }
 
   function openEditModal(wallet) {
+    if (wallet.userRole !== 'OWNER') return
     setName(wallet.name)
     setDescription(wallet.description || '')
     setError('')
@@ -203,6 +204,17 @@ export function WalletsPage() {
     }
   }
 
+  async function handleLeave(wallet) {
+    if (!window.confirm(`Sair da carteira "${wallet.name}"?`)) return
+
+    try {
+      await walletApi.leave(wallet.id)
+      await reloadWallets()
+    } catch (leaveError) {
+      setListError(leaveError.message || 'Não foi possível sair da carteira.')
+    }
+  }
+
   return (
     <div className="grid gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -227,7 +239,12 @@ export function WalletsPage() {
         </Alert>
       )}
       {status === 'ready' && wallets.length === 0 && (
-        <p className="text-sm text-muted-foreground">Nenhuma carteira cadastrada.</p>
+        <div className="grid gap-3 rounded-xl border bg-card p-5">
+          <p className="font-medium">Nenhuma carteira cadastrada.</p>
+          <p className="text-sm text-muted-foreground">
+            Crie uma carteira para registrar lançamentos e compartilhar dados.
+          </p>
+        </div>
       )}
       <div className="grid gap-3">
         {wallets.map((wallet) => (
@@ -243,12 +260,19 @@ export function WalletsPage() {
               <p className="mt-2 text-xs text-muted-foreground">{wallet.userRole}</p>
             </div>
             <div className="flex shrink-0 gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => openEditModal(wallet)}>
-                Editar
-              </Button>
               {wallet.userRole === 'OWNER' && (
-                <Button type="button" variant="destructive" size="sm" onClick={() => handleDelete(wallet)}>
-                  Excluir
+                <>
+                  <Button type="button" variant="outline" size="sm" onClick={() => openEditModal(wallet)}>
+                    Editar
+                  </Button>
+                  <Button type="button" variant="destructive" size="sm" onClick={() => handleDelete(wallet)}>
+                    Excluir
+                  </Button>
+                </>
+              )}
+              {wallet.userRole !== 'OWNER' && (
+                <Button type="button" variant="destructive" size="sm" onClick={() => handleLeave(wallet)}>
+                  Sair
                 </Button>
               )}
             </div>
@@ -333,15 +357,16 @@ export function WalletsPage() {
                     </div>
                     {member.pending ? (
                       <span className="text-xs text-muted-foreground">{member.role}</span>
+                    ) : member.role === 'OWNER' ? (
+                      <span className="text-sm text-muted-foreground">OWNER</span>
                     ) : (
                       <>
                         <select
                           className="h-9 rounded-md border bg-background px-2 text-sm"
-                          disabled={!isOwner || member.userId === user?.id}
+                          disabled={!isOwner || member.role === 'OWNER'}
                           value={member.role}
                           onChange={(event) => handleRoleChange(member, event.target.value)}
                         >
-                          <option value="OWNER">OWNER</option>
                           <option value="EDITOR">EDITOR</option>
                           <option value="VIEWER">VIEWER</option>
                         </select>

@@ -10,6 +10,7 @@ export function AuthenticatedLayout() {
 
   function handleLogout() {
     logout()
+    window.localStorage.removeItem(`activeWalletId:${user?.id}`)
     window.localStorage.removeItem('activeWalletId')
     navigate('/login', { replace: true })
   }
