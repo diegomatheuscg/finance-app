@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Link } from 'react-router-dom'
 import { useWallet } from '@/contexts/wallet-context'
-import { dashboardApi, reportApi, transactionApi } from '@/lib/api'
+import { dashboardApi, insightApi, reportApi, transactionApi } from '@/lib/api'
 
 const currencyFormatter = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
@@ -95,6 +95,9 @@ export function DashboardPlaceholderPage() {
   const [error, setError] = useState('')
   const [reportError, setReportError] = useState('')
   const [exportingReport, setExportingReport] = useState(false)
+  const [insight, setInsight] = useState(null)
+  const [insightError, setInsightError] = useState('')
+  const [generatingInsight, setGeneratingInsight] = useState(false)
   const [period, setPeriod] = useState(currentMonthPeriod)
   const periodError = period.startDate > period.endDate
     ? 'A data inicial não pode ser posterior à data final.'
@@ -168,6 +171,25 @@ export function DashboardPlaceholderPage() {
     }
   }
 
+  async function generateInsight() {
+    const insightPeriod = { ...period }
+    setInsight(null)
+    setInsightError('')
+    setGeneratingInsight(true)
+    try {
+      const result = await insightApi.generate(activeWallet.id, insightPeriod)
+      setInsight({
+        ...result,
+        walletName: activeWallet.name,
+        period: insightPeriod,
+      })
+    } catch (requestError) {
+      setInsightError(requestError.message || 'Não foi possível gerar a análise.')
+    } finally {
+      setGeneratingInsight(false)
+    }
+  }
+
   const hasTransactions = Boolean(data?.recentTransactions?.length)
   const chartData = useMemo(() => data?.monthly || [], [data])
 
@@ -204,6 +226,13 @@ export function DashboardPlaceholderPage() {
               </label>
               <Button
                 variant="outline"
+                onClick={generateInsight}
+                disabled={!activeWallet || loading || Boolean(periodError) || generatingInsight}
+              >
+                {generatingInsight ? 'Analisando...' : 'Análise com IA'}
+              </Button>
+              <Button
+                variant="outline"
                 onClick={exportReport}
                 disabled={!activeWallet || loading || Boolean(periodError) || exportingReport}
               >
@@ -216,6 +245,48 @@ export function DashboardPlaceholderPage() {
             <Alert variant="destructive">
               <AlertDescription>{reportError}</AlertDescription>
             </Alert>
+          )}
+
+          {(generatingInsight || insightError || insight) && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Análise financeira com IA</CardTitle>
+                <CardDescription>
+                  A análise envia o nome da carteira e valores agregados ao Google Gemini, sem descrições
+                  de lançamentos.{' '}
+                  {insight && `${insight.walletName} · ${formatLocalDate(insight.period.startDate)} a ${formatLocalDate(insight.period.endDate)}`}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {generatingInsight && (
+                  <p role="status" className="text-sm text-muted-foreground">
+                    Analisando seus dados financeiros...
+                  </p>
+                )}
+                {!generatingInsight && insightError && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{insightError}</AlertDescription>
+                  </Alert>
+                )}
+                {!generatingInsight && insight && (
+                  <div className="grid gap-4">
+                    <p className="font-medium">{insight.resumo}</p>
+                    <div>
+                      <h3 className="mb-2 text-sm font-semibold">Observações</h3>
+                      <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                        {insight.observacoes.map((item, index) => <li key={index}>{item}</li>)}
+                      </ul>
+                    </div>
+                    <div>
+                      <h3 className="mb-2 text-sm font-semibold">Sugestões</h3>
+                      <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                        {insight.sugestoes.map((item, index) => <li key={index}>{item}</li>)}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           )}
 
           {!loading && walletStatus === 'ready' && !activeWallet && (

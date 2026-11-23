@@ -220,6 +220,14 @@ export const dashboardApi = {
       ),
 }
 
+export const insightApi = {
+  generate: (walletId, period) =>
+    apiRequest(
+      `/api/v1/wallets/${walletId}/insights${buildQueryString(period)}`,
+      { method: 'POST' },
+    ),
+}
+
 export const reportApi = {
   downloadSummary: async (walletId, period) => {
     const blob = await apiRequest(
