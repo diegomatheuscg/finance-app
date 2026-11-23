@@ -47,7 +47,7 @@ function buildQueryString(params) {
   return query ? `?${query}` : ''
 }
 
-export async function apiRequest(path, { method = 'GET', body, token } = {}) {
+export async function apiRequest(path, { method = 'GET', body, token, responseType = 'json' } = {}) {
   const headers = new Headers()
   const accessToken = token ?? window.localStorage.getItem('accessToken')
 
@@ -86,7 +86,7 @@ export async function apiRequest(path, { method = 'GET', body, token } = {}) {
     throw new ApiError(getErrorMessage(payload, fallback), response.status)
   }
 
-  return payload
+  return responseType === 'blob' ? response.blob() : payload
 }
 
 export const authApi = {
@@ -218,4 +218,21 @@ export const dashboardApi = {
           endDate: filters.endDate,
         })}`,
       ),
+}
+
+export const reportApi = {
+  downloadSummary: async (walletId, period) => {
+    const blob = await apiRequest(
+      `/api/v1/wallets/${walletId}/reports/summary${buildQueryString(period)}`,
+      { responseType: 'blob' },
+    )
+    const downloadUrl = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download = `relatorio-carteira-${walletId}-${period.startDate}-${period.endDate}.pdf`
+    document.body.append(link)
+    link.click()
+    link.remove()
+    window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000)
+  },
 }
