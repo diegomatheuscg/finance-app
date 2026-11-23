@@ -13,23 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Link } from 'react-router-dom'
 import { useWallet } from '@/contexts/wallet-context'
-
-const mockDashboardData = {
-  balance: 2840.5,
-  income: 5200,
-  expense: 2359.5,
-  monthly: [
-    { month: 'Jan', income: 4200, expense: 2100 },
-    { month: 'Fev', income: 4700, expense: 2500 },
-    { month: 'Mar', income: 5200, expense: 2359.5 },
-  ],
-  recentTransactions: [
-    { id: 1, description: 'Salário', date: '05 mar 2025', amount: 4200, type: 'income' },
-    { id: 2, description: 'Aluguel', date: '03 mar 2025', amount: 1450, type: 'expense' },
-    { id: 3, description: 'Supermercado', date: '02 mar 2025', amount: 386.75, type: 'expense' },
-    { id: 4, description: 'Freelance de design', date: '28 fev 2025', amount: 1000, type: 'income' },
-  ],
-}
+import { dashboardApi, transactionApi } from '@/lib/api'
 
 const currencyFormatter = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
@@ -68,11 +52,47 @@ function DashboardLoading() {
   )
 }
 
+function toLocalDateInput(date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+  ].join('-')
+}
+
+function currentMonthPeriod() {
+  const today = new Date()
+  const start = new Date(today.getFullYear(), today.getMonth(), 1)
+  const end = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+  return {
+    startDate: toLocalDateInput(start),
+    endDate: toLocalDateInput(end),
+  }
+}
+
+function formatMonth(month) {
+  const [year, monthNumber] = month.split('-')
+  const date = new Date(Number(year), Number(monthNumber) - 1, 1)
+  return new Intl.DateTimeFormat('pt-BR', { month: 'short' })
+    .format(date)
+    .replace('.', '')
+}
+
+function formatLocalDate(value) {
+  if (!value) return ''
+  const [year, month, day] = value.split('-')
+  return `${day}/${month}/${year}`
+}
+
 export function DashboardPlaceholderPage() {
   const { activeWallet, status: walletStatus } = useWallet()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [period, setPeriod] = useState(currentMonthPeriod)
+  const periodError = period.startDate > period.endDate
+    ? 'A data inicial não pode ser posterior à data final.'
+    : ''
 
   const loadDashboard = useCallback(async () => {
     if (!activeWallet) {
@@ -80,18 +100,50 @@ export function DashboardPlaceholderPage() {
       setLoading(false)
       return
     }
+    if (periodError) {
+      setData(null)
+      setLoading(false)
+      setError(periodError)
+      return
+    }
     setLoading(true)
     setError('')
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 700))
-      setData(mockDashboardData)
-    } catch {
-      setError('Não foi possível carregar seu resumo financeiro.')
+      const [summary, recentPage] = await Promise.all([
+        dashboardApi.summary(activeWallet.id, period),
+        transactionApi.list(activeWallet.id, {
+          startDate: period.startDate,
+          endDate: period.endDate,
+          page: 0,
+          size: 5,
+          sort: 'date,desc',
+        }),
+      ])
+      setData({
+        balance: summary.balance,
+        income: summary.totalIncome,
+        expense: summary.totalExpense,
+        transactionCount: summary.transactionCount,
+        monthly: (summary.byMonth || []).map((item) => ({
+          month: formatMonth(item.month),
+          income: item.income,
+          expense: item.expense,
+        })),
+        recentTransactions: (recentPage.content || []).map((transaction) => ({
+          id: transaction.id,
+          description: transaction.description || 'Sem descrição',
+          date: formatLocalDate(transaction.date),
+          amount: transaction.amount,
+          type: transaction.type === 'INCOME' ? 'income' : 'expense',
+        })),
+      })
+    } catch (loadError) {
+      setError(loadError.message || 'Não foi possível carregar seu resumo financeiro.')
     } finally {
       setLoading(false)
     }
-  }, [activeWallet])
+  }, [activeWallet, period, periodError])
 
   useEffect(() => {
     const timer = setTimeout(loadDashboard, 0)
@@ -105,7 +157,34 @@ export function DashboardPlaceholderPage() {
     <section className="grid min-w-0 gap-6">
           <div className="flex min-h-11 flex-wrap items-center justify-between gap-4">
             <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Março de 2025</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="flex items-center gap-2 text-sm">
+                De
+                <input
+                  className="h-9 rounded-md border bg-background px-2"
+                  type="date"
+                  max={period.endDate}
+                  value={period.startDate}
+                  onChange={(event) => setPeriod((current) => ({
+                    ...current,
+                    startDate: event.target.value,
+                  }))}
+                />
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                Até
+                <input
+                  className="h-9 rounded-md border bg-background px-2"
+                  type="date"
+                  min={period.startDate}
+                  value={period.endDate}
+                  onChange={(event) => setPeriod((current) => ({
+                    ...current,
+                    endDate: event.target.value,
+                  }))}
+                />
+              </label>
+            </div>
           </div>
 
           {!loading && walletStatus === 'ready' && !activeWallet && (
