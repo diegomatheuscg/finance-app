@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Plus } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { useWallet } from '@/contexts/wallet-context'
@@ -216,10 +217,13 @@ export function WalletsPage() {
   }
 
   return (
-    <div className="grid gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Carteiras</h1>
-        <Button type="button" onClick={openCreateModal}>Nova carteira</Button>
+    <section className="grid min-w-0 gap-6">
+      <div className="flex min-h-11 flex-wrap items-center justify-between gap-3">
+        <h1 className="text-3xl font-semibold tracking-tight">Carteiras</h1>
+        <Button type="button" onClick={openCreateModal}>
+          <Plus size={16} aria-hidden="true" />
+          Nova carteira
+        </Button>
       </div>
 
       {status === 'loading' && (
@@ -414,6 +418,6 @@ export function WalletsPage() {
           </form>
         </Modal>
       )}
-    </div>
+    </section>
   )
 }

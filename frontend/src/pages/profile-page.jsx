@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { AuthField } from '@/components/auth/auth-field'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/hooks/use-auth'
 import { profileSchema } from '@/lib/validation'
 
@@ -41,40 +42,47 @@ export function ProfilePage() {
   }
 
   return (
-    <section className="max-w-2xl rounded-xl border bg-card p-6 shadow-sm sm:p-10">
-      <div className="mb-7">
-        <h1 className="text-3xl font-semibold tracking-tight">Meu perfil</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{user?.email}</p>
+    <section className="grid min-w-0 gap-6">
+      <div className="flex min-h-11 items-center">
+        <h1 className="text-3xl font-semibold tracking-tight">Perfil</h1>
       </div>
 
-      {serverError && (
-        <Alert variant="destructive" className="mb-5">
-          <AlertDescription>{serverError}</AlertDescription>
-        </Alert>
-      )}
-      {successMessage && (
-        <Alert variant="success" className="mb-5">
-          <AlertDescription>{successMessage}</AlertDescription>
-        </Alert>
-      )}
+      <Card className="max-w-2xl">
+        <CardHeader>
+          <CardTitle>Dados da conta</CardTitle>
+          <CardDescription>{user?.email}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {serverError && (
+            <Alert variant="destructive" className="mb-5">
+              <AlertDescription>{serverError}</AlertDescription>
+            </Alert>
+          )}
+          {successMessage && (
+            <Alert variant="success" className="mb-5">
+              <AlertDescription>{successMessage}</AlertDescription>
+            </Alert>
+          )}
 
-      <form className="grid gap-5" onSubmit={handleSubmit(onSubmit)} noValidate>
-        <AuthField
-          label="Nome"
-          autoComplete="name"
-          placeholder="Seu nome"
-          error={errors.name?.message}
-          {...register('name')}
-        />
-        <Button
-          className="mt-1 w-full sm:w-auto sm:justify-self-start"
-          size="lg"
-          type="submit"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'Salvando...' : 'Salvar perfil'}
-        </Button>
-      </form>
+          <form className="grid gap-5" onSubmit={handleSubmit(onSubmit)} noValidate>
+            <AuthField
+              label="Nome"
+              autoComplete="name"
+              placeholder="Nome completo"
+              error={errors.name?.message}
+              {...register('name')}
+            />
+            <Button
+              className="mt-1 w-full sm:w-auto sm:justify-self-start"
+              size="lg"
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Salvando...' : 'Salvar perfil'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </section>
   )
 }

@@ -11,7 +11,8 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { useAuth } from '@/hooks/use-auth'
+import { Link } from 'react-router-dom'
+import { useWallet } from '@/contexts/wallet-context'
 
 const mockDashboardData = {
   balance: 2840.5,
@@ -68,12 +69,17 @@ function DashboardLoading() {
 }
 
 export function DashboardPlaceholderPage() {
-  const { user } = useAuth()
+  const { activeWallet, status: walletStatus } = useWallet()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   const loadDashboard = useCallback(async () => {
+    if (!activeWallet) {
+      setData(null)
+      setLoading(false)
+      return
+    }
     setLoading(true)
     setError('')
 
@@ -85,27 +91,37 @@ export function DashboardPlaceholderPage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [activeWallet])
 
   useEffect(() => {
     const timer = setTimeout(loadDashboard, 0)
     return () => clearTimeout(timer)
   }, [loadDashboard])
 
-  const firstName = user?.name?.split(' ')[0] || 'por aqui'
   const hasTransactions = Boolean(data?.recentTransactions?.length)
   const chartData = useMemo(() => data?.monthly || [], [data])
 
   return (
-    <section className="min-w-0">
-          <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <h1 className="mt-1 text-3xl font-semibold tracking-tight">
-                Olá, {firstName}!
-              </h1>
-            </div>
+    <section className="grid min-w-0 gap-6">
+          <div className="flex min-h-11 flex-wrap items-center justify-between gap-4">
+            <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
             <p className="text-sm text-muted-foreground">Março de 2025</p>
           </div>
+
+          {!loading && walletStatus === 'ready' && !activeWallet && (
+            <div className="grid gap-3 rounded-xl border bg-card p-5">
+              <p className="font-medium">Nenhuma carteira cadastrada.</p>
+              <p className="text-sm text-muted-foreground">
+                Crie uma carteira para visualizar o dashboard.
+              </p>
+              <Link
+                to="/carteiras"
+                className="inline-flex h-9 w-fit items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
+              >
+                Criar carteira
+              </Link>
+            </div>
+          )}
 
           {loading && <DashboardLoading />}
 

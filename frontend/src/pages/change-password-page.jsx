@@ -5,6 +5,7 @@ import { AuthField } from '@/components/auth/auth-field'
 import { PasswordStrength } from '@/components/auth/password-strength'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { userApi } from '@/lib/api'
 import { changePasswordSchema } from '@/lib/validation'
 
@@ -41,11 +42,17 @@ export function ChangePasswordPage() {
   }
 
   return (
-    <section className="max-w-2xl rounded-xl border bg-card p-6 shadow-sm sm:p-10">
-          <div className="mb-7">
-            <h1 className="text-3xl font-semibold tracking-tight">Alterar senha</h1>
-          </div>
+    <section className="grid min-w-0 gap-6">
+      <div className="flex min-h-11 items-center">
+        <h1 className="text-3xl font-semibold tracking-tight">Alterar senha</h1>
+      </div>
 
+      <Card className="max-w-2xl">
+        <CardHeader>
+          <CardTitle>Senha da conta</CardTitle>
+          <CardDescription>Confirme a senha atual antes de definir uma nova senha.</CardDescription>
+        </CardHeader>
+        <CardContent>
           {serverError && (
             <Alert variant="destructive" className="mb-5">
               <AlertDescription>{serverError}</AlertDescription>
@@ -71,7 +78,7 @@ export function ChangePasswordPage() {
                 label="Nova senha"
                 type="password"
                 autoComplete="new-password"
-                placeholder="Crie uma nova senha"
+                placeholder="Mínimo 8 caracteres"
                 error={errors.newPassword?.message}
                 {...register('newPassword')}
               />
@@ -86,13 +93,11 @@ export function ChangePasswordPage() {
               {...register('confirmPassword')}
             />
             <Button className="mt-1 w-full sm:w-auto sm:justify-self-start" size="lg" type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                'Salvando...'
-              ) : (
-                'Alterar senha'
-              )}
+              {isSubmitting ? 'Salvando...' : 'Alterar senha'}
             </Button>
           </form>
+        </CardContent>
+      </Card>
     </section>
   )
 }

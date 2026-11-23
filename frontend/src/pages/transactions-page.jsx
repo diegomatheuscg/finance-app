@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Plus } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { useWallet } from '@/contexts/wallet-context'
@@ -144,20 +146,38 @@ export function TransactionsPage() {
 
   if (!activeWallet) {
     return (
-      <div className="grid gap-3">
-        <h1 className="text-2xl font-semibold">Lançamentos</h1>
-        <p className="text-sm text-muted-foreground">Crie ou selecione uma carteira antes de registrar lançamentos.</p>
-      </div>
+      <section className="grid min-w-0 gap-6">
+        <div className="flex min-h-11 items-center">
+          <h1 className="text-3xl font-semibold tracking-tight">Lançamentos</h1>
+        </div>
+        <div className="grid gap-3 rounded-xl border bg-card p-5 shadow-sm">
+          <p className="font-medium">Nenhuma carteira cadastrada.</p>
+          <p className="text-sm text-muted-foreground">
+            Crie uma carteira antes de registrar lançamentos.
+          </p>
+          <Link
+            to="/carteiras"
+            className="inline-flex h-9 w-fit items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
+          >
+            Criar carteira
+          </Link>
+        </div>
+      </section>
     )
   }
 
   const canEdit = ['OWNER', 'EDITOR'].includes(activeWallet.userRole)
 
   return (
-    <div className="grid gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Lançamentos</h1>
-        {canEdit && <Button type="button" onClick={() => setShowCreateModal(true)}>Novo lançamento</Button>}
+    <section className="grid min-w-0 gap-6">
+      <div className="flex min-h-11 flex-wrap items-center justify-between gap-3">
+        <h1 className="text-3xl font-semibold tracking-tight">Lançamentos</h1>
+        {canEdit && (
+          <Button type="button" onClick={() => setShowCreateModal(true)}>
+            <Plus size={16} aria-hidden="true" />
+            Novo lançamento
+          </Button>
+        )}
       </div>
       <div className="grid gap-3 rounded-xl border bg-card p-4 md:grid-cols-5">
         <select className="h-10 rounded-md border bg-background px-3 text-sm" value={filters.type} onChange={(event) => updateFilter('type', event.target.value)}>
@@ -217,6 +237,6 @@ export function TransactionsPage() {
           onSaved={loadTransactions}
         />
       )}
-    </div>
+    </section>
   )
 }

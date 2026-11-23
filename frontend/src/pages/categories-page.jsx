@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Plus } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { categoryApi } from '@/lib/api'
@@ -129,10 +130,13 @@ export function CategoriesPage() {
   }
 
   return (
-    <div className="grid gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Categorias</h1>
-        <Button type="button" onClick={() => setShowCreateModal(true)}>Nova categoria</Button>
+    <section className="grid min-w-0 gap-6">
+      <div className="flex min-h-11 flex-wrap items-center justify-between gap-3">
+        <h1 className="text-3xl font-semibold tracking-tight">Categorias</h1>
+        <Button type="button" onClick={() => setShowCreateModal(true)}>
+          <Plus size={16} aria-hidden="true" />
+          Nova categoria
+        </Button>
       </div>
 
       {loadError && (
@@ -200,6 +204,6 @@ export function CategoriesPage() {
           onSaved={loadCategories}
         />
       )}
-    </div>
+    </section>
   )
 }
