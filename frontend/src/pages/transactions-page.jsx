@@ -41,7 +41,7 @@ function TransactionModal({ categories, transaction, onClose, onSaved, walletId 
       } else {
         await transactionApi.create(walletId, details)
       }
-      await onSaved()
+      await onSaved(transaction ? 'Lançamento atualizado.' : 'Lançamento criado.')
       onClose()
     } catch (saveError) {
       setError(saveError.message || 'Não foi possível salvar o lançamento.')
@@ -103,11 +103,21 @@ export function TransactionsPage() {
   const [filters, setFilters] = useState({ type: '', categoryId: '', startDate: '', endDate: '', page: 0, size: 10 })
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const [modalTransaction, setModalTransaction] = useState(undefined)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const todayLocal = [
+    new Date().getFullYear(),
+    String(new Date().getMonth() + 1).padStart(2, '0'),
+    String(new Date().getDate()).padStart(2, '0'),
+  ].join('-')
+  const filterError = filters.startDate && filters.endDate
+    && filters.startDate > filters.endDate
+    ? 'A data inicial não pode ser posterior à data final.'
+    : ''
 
   const loadTransactions = useCallback(async () => {
-    if (!activeWalletId) return
+    if (!activeWalletId || filterError) return
     setStatus('loading')
     setError('')
     try {
@@ -127,7 +137,7 @@ export function TransactionsPage() {
       setError(loadError.message || 'Não foi possível carregar os lançamentos.')
       setStatus('error')
     }
-  }, [activeWalletId, filters])
+  }, [activeWalletId, filters, filterError])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -139,14 +149,18 @@ export function TransactionsPage() {
   async function handleDelete(transaction) {
     if (!window.confirm('Excluir este lançamento?')) return
     try {
+      setSuccessMessage('')
+      setError('')
       await transactionApi.remove(activeWallet.id, transaction.id)
       await loadTransactions()
+      setSuccessMessage('Lançamento excluído.')
     } catch (deleteError) {
       setError(deleteError.message || 'Não foi possível excluir o lançamento.')
     }
   }
 
   function updateFilter(key, value) {
+    setSuccessMessage('')
     setFilters((currentFilters) => ({ ...currentFilters, [key]: value, page: 0 }))
   }
 
@@ -195,10 +209,23 @@ export function TransactionsPage() {
           <option value="">Todas as categorias</option>
           {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
         </select>
-        <input className="h-10 rounded-md border bg-background px-3 text-sm" type="date" value={filters.startDate} onChange={(event) => updateFilter('startDate', event.target.value)} />
-        <input className="h-10 rounded-md border bg-background px-3 text-sm" type="date" value={filters.endDate} onChange={(event) => updateFilter('endDate', event.target.value)} />
-        <Button type="button" variant="outline" onClick={() => setFilters({ type: '', categoryId: '', startDate: '', endDate: '', page: 0, size: 10 })}>Limpar filtros</Button>
+        <input className="h-10 rounded-md border bg-background px-3 text-sm" type="date" max={todayLocal} value={filters.startDate} onChange={(event) => updateFilter('startDate', event.target.value)} />
+        <input className="h-10 rounded-md border bg-background px-3 text-sm" type="date" max={todayLocal} value={filters.endDate} onChange={(event) => updateFilter('endDate', event.target.value)} />
+        <Button type="button" variant="outline" onClick={() => {
+          setSuccessMessage('')
+          setFilters({ type: '', categoryId: '', startDate: '', endDate: '', page: 0, size: 10 })
+        }}>Limpar filtros</Button>
       </div>
+      {filterError && (
+        <Alert variant="destructive">
+          <AlertDescription>{filterError}</AlertDescription>
+        </Alert>
+      )}
+      {successMessage && (
+        <Alert variant="success">
+          <AlertDescription>{successMessage}</AlertDescription>
+        </Alert>
+      )}
       {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
       {status === 'loading' && <p className="text-sm text-muted-foreground">Carregando lançamentos...</p>}
       {status === 'ready' && transactions.length === 0 && <p className="text-sm text-muted-foreground">Nenhum lançamento encontrado.</p>}
@@ -240,7 +267,11 @@ export function TransactionsPage() {
             setShowCreateModal(false)
             setModalTransaction(undefined)
           }}
-          onSaved={loadTransactions}
+          onSaved={async (message) => {
+            await loadTransactions()
+            setSuccessMessage(message)
+            setError('')
+          }}
         />
       )}
     </section>
