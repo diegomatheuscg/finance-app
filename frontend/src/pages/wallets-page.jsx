@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Plus } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { useWallet } from '@/contexts/wallet-context'
 import { useAuth } from '@/hooks/use-auth'
 import { walletApi } from '@/lib/api'
@@ -44,7 +45,7 @@ function MemberFields({ memberEmail, memberRole, onEmailChange, onRoleChange, on
         <option value="VIEWER">VIEWER</option>
         <option value="EDITOR">EDITOR</option>
       </select>
-      <Button type="button" variant="outline" onClick={onAdd}>Adicionar à lista</Button>
+      <Button type="button" onClick={onAdd}>Adicionar à lista</Button>
     </div>
   )
 }
@@ -67,6 +68,8 @@ export function WalletsPage() {
   const [membersError, setMembersError] = useState('')
   const [memberEmail, setMemberEmail] = useState('')
   const [memberRole, setMemberRole] = useState('VIEWER')
+  const [confirmAction, setConfirmAction] = useState(null)
+  const [isConfirming, setIsConfirming] = useState(false)
 
   const selectedWallet = wallets.find((wallet) => String(wallet.id) === String(modal?.walletId))
   const isOwner = selectedWallet?.userRole === 'OWNER'
@@ -167,13 +170,16 @@ export function WalletsPage() {
   }
 
   async function handleDelete(wallet) {
-    if (!window.confirm(`Excluir a carteira "${wallet.name}"?`)) return
-
+    if (!wallet) return
+    setIsConfirming(true)
     try {
       await walletApi.remove(wallet.id)
       await reloadWallets()
+      setConfirmAction(null)
     } catch (deleteError) {
       setListError(deleteError.message || 'Não foi possível excluir a carteira.')
+    } finally {
+      setIsConfirming(false)
     }
   }
 
@@ -193,26 +199,43 @@ export function WalletsPage() {
   }
 
   async function handleRemoveMember(member) {
-    if (!window.confirm(`Remover ${member.email} da carteira?`)) return
-
+    if (!member) return
+    setIsConfirming(true)
     try {
       await walletApi.removeMember(modal.walletId, member.userId)
       setMembers((currentMembers) => currentMembers.filter(
         (currentMember) => currentMember.userId !== member.userId,
       ))
+      setConfirmAction(null)
     } catch (removeError) {
       setMembersError(removeError.message || 'Não foi possível remover o membro.')
+    } finally {
+      setIsConfirming(false)
+    }
+  }
+
+  async function handleConfirmAction() {
+    if (!confirmAction) return
+    if (confirmAction.type === 'delete-wallet') {
+      await handleDelete(confirmAction.wallet)
+    } else if (confirmAction.type === 'leave') {
+      await handleLeave(confirmAction.wallet)
+    } else if (confirmAction.type === 'remove-member') {
+      await handleRemoveMember(confirmAction.member)
     }
   }
 
   async function handleLeave(wallet) {
-    if (!window.confirm(`Sair da carteira "${wallet.name}"?`)) return
-
+    if (!wallet) return
+    setIsConfirming(true)
     try {
       await walletApi.leave(wallet.id)
       await reloadWallets()
+      setConfirmAction(null)
     } catch (leaveError) {
       setListError(leaveError.message || 'Não foi possível sair da carteira.')
+    } finally {
+      setIsConfirming(false)
     }
   }
 
@@ -229,6 +252,35 @@ export function WalletsPage() {
       {status === 'loading' && (
         <p className="text-sm text-muted-foreground">Carregando carteiras...</p>
       )}
+      <ConfirmDialog
+        open={Boolean(confirmAction)}
+        title={
+          confirmAction?.type === 'delete-wallet'
+            ? 'Excluir carteira'
+            : confirmAction?.type === 'leave'
+              ? 'Sair da carteira'
+              : 'Remover membro'
+        }
+        description={
+          confirmAction?.type === 'delete-wallet'
+            ? `Excluir "${confirmAction.wallet.name}" permanentemente?`
+            : confirmAction?.type === 'leave'
+              ? `Sair da carteira "${confirmAction.wallet.name}"?`
+              : `Remover ${confirmAction?.member?.email || 'o membro'} desta carteira?`
+        }
+        confirmLabel={
+          confirmAction?.type === 'delete-wallet'
+            ? 'Excluir carteira'
+            : confirmAction?.type === 'leave'
+              ? 'Sair da carteira'
+              : 'Remover membro'
+        }
+        pending={isConfirming}
+        onClose={() => {
+          if (!isConfirming) setConfirmAction(null)
+        }}
+        onConfirm={handleConfirmAction}
+      />
       {loadError && (
         <Alert variant="destructive">
           <AlertDescription className="flex items-center justify-between gap-4">
@@ -269,13 +321,13 @@ export function WalletsPage() {
                   <Button type="button" variant="outline" size="sm" onClick={() => openEditModal(wallet)}>
                     Editar
                   </Button>
-                  <Button type="button" variant="destructive" size="sm" onClick={() => handleDelete(wallet)}>
+                  <Button type="button" variant="destructive" size="sm" onClick={() => setConfirmAction({ type: 'delete-wallet', wallet })}>
                     Excluir
                   </Button>
                 </>
               )}
               {wallet.userRole !== 'OWNER' && (
-                <Button type="button" variant="destructive" size="sm" onClick={() => handleLeave(wallet)}>
+                <Button type="button" variant="destructive" size="sm" onClick={() => setConfirmAction({ type: 'leave', wallet })}>
                   Sair
                 </Button>
               )}
@@ -375,7 +427,7 @@ export function WalletsPage() {
                           <option value="VIEWER">VIEWER</option>
                         </select>
                         {isOwner && member.userId !== user?.id && (
-                          <Button type="button" variant="outline" size="sm" onClick={() => handleRemoveMember(member)}>
+                          <Button type="button" variant="outline" size="sm" onClick={() => setConfirmAction({ type: 'remove-member', member })}>
                             Remover
                           </Button>
                         )}

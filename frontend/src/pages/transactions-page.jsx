@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { useWallet } from '@/contexts/wallet-context'
 import { categoryApi, transactionApi } from '@/lib/api'
 
@@ -106,6 +107,8 @@ export function TransactionsPage() {
   const [successMessage, setSuccessMessage] = useState('')
   const [modalTransaction, setModalTransaction] = useState(undefined)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [transactionToDelete, setTransactionToDelete] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const todayLocal = [
     new Date().getFullYear(),
     String(new Date().getMonth() + 1).padStart(2, '0'),
@@ -146,16 +149,20 @@ export function TransactionsPage() {
     return () => clearTimeout(timer)
   }, [loadTransactions])
 
-  async function handleDelete(transaction) {
-    if (!window.confirm('Excluir este lançamento?')) return
+  async function handleDelete() {
+    if (!transactionToDelete) return
+    setIsDeleting(true)
     try {
       setSuccessMessage('')
       setError('')
-      await transactionApi.remove(activeWallet.id, transaction.id)
+      await transactionApi.remove(activeWallet.id, transactionToDelete.id)
       await loadTransactions()
       setSuccessMessage('Lançamento excluído.')
+      setTransactionToDelete(null)
     } catch (deleteError) {
       setError(deleteError.message || 'Não foi possível excluir o lançamento.')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -243,7 +250,7 @@ export function TransactionsPage() {
                   {isIncome ? '+' : '-'} R$ {Number(transaction.amount).toFixed(2).replace('.', ',')}
                 </span>
                 {canEdit && <Button type="button" variant="outline" size="sm" onClick={() => setModalTransaction(transaction)}>Editar</Button>}
-                {canEdit && <Button type="button" variant="destructive" size="sm" onClick={() => handleDelete(transaction)}>Excluir</Button>}
+                {canEdit && <Button type="button" variant="destructive" size="sm" onClick={() => setTransactionToDelete(transaction)}>Excluir</Button>}
               </div>
             </div>
           )
@@ -274,6 +281,17 @@ export function TransactionsPage() {
           }}
         />
       )}
+      <ConfirmDialog
+        open={Boolean(transactionToDelete)}
+        title="Excluir lançamento"
+        description={`Excluir "${transactionToDelete?.description || 'Sem descrição'}" permanentemente?`}
+        confirmLabel="Excluir lançamento"
+        pending={isDeleting}
+        onClose={() => {
+          if (!isDeleting) setTransactionToDelete(null)
+        }}
+        onConfirm={handleDelete}
+      />
     </section>
   )
 }

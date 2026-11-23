@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { categoryApi } from '@/lib/api'
 
 const categoryColors = [
@@ -54,6 +55,7 @@ function CategoryModal({ category, onClose, onSaved }) {
   const [icon, setIcon] = useState(category?.icon || 'wallet')
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [typeChangeDetails, setTypeChangeDetails] = useState(null)
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -61,22 +63,34 @@ function CategoryModal({ category, onClose, onSaved }) {
     setIsSubmitting(true)
 
     try {
-      if (category && category.type !== type) {
-        const confirmed = window.confirm(
-          'Ao alterar o tipo desta categoria, os lançamentos vinculados ficarão sem categoria. Continuar?',
-        )
-        if (!confirmed) {
-          setIsSubmitting(false)
-          return
-        }
-      }
       const details = { name: name.trim(), type, color, icon }
+      if (category && category.type !== type) {
+        setTypeChangeDetails(details)
+        setIsSubmitting(false)
+        return
+      }
       if (category) {
         await categoryApi.update(category.id, details)
       } else {
         await categoryApi.create(details)
       }
       await onSaved()
+      onClose()
+    } catch (saveError) {
+      setError(saveError.message || 'Não foi possível salvar a categoria.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  async function confirmTypeChange() {
+    if (!category || !typeChangeDetails) return
+    setIsSubmitting(true)
+    setError('')
+    try {
+      await categoryApi.update(category.id, typeChangeDetails)
+      await onSaved()
+      setTypeChangeDetails(null)
       onClose()
     } catch (saveError) {
       setError(saveError.message || 'Não foi possível salvar a categoria.')
@@ -182,6 +196,15 @@ function CategoryModal({ category, onClose, onSaved }) {
             {isSubmitting ? 'Salvando...' : category ? 'Salvar alterações' : 'Criar categoria'}
           </Button>
         </form>
+          <ConfirmDialog
+            open={Boolean(typeChangeDetails)}
+            title="Alterar tipo da categoria"
+            description="Os lançamentos vinculados ficarão sem categoria. Continuar?"
+            confirmLabel="Alterar tipo"
+            pending={isSubmitting}
+            onClose={() => setTypeChangeDetails(null)}
+            onConfirm={confirmTypeChange}
+          />
       </div>
     </div>
   )
@@ -194,6 +217,8 @@ export function CategoriesPage() {
   const [listError, setListError] = useState('')
   const [modalCategory, setModalCategory] = useState(undefined)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [categoryToDelete, setCategoryToDelete] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const loadCategories = useCallback(async () => {
     setStatus('loading')
@@ -219,15 +244,18 @@ export function CategoriesPage() {
     setModalCategory(undefined)
   }
 
-  async function handleDelete(category) {
-    if (!window.confirm(`Excluir a categoria "${category.name}"?`)) return
-
+  async function handleDelete() {
+    if (!categoryToDelete) return
+    setIsDeleting(true)
     setListError('')
     try {
-      await categoryApi.remove(category.id)
+      await categoryApi.remove(categoryToDelete.id)
       await loadCategories()
+      setCategoryToDelete(null)
     } catch (error) {
       setListError(error.message || 'Não foi possível excluir a categoria.')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -293,7 +321,7 @@ export function CategoriesPage() {
                         type="button"
                         variant="destructive"
                         size="sm"
-                        onClick={() => handleDelete(category)}
+                        onClick={() => setCategoryToDelete(category)}
                       >
                         Excluir
                       </Button>
@@ -313,6 +341,17 @@ export function CategoriesPage() {
           onSaved={loadCategories}
         />
       )}
+      <ConfirmDialog
+        open={Boolean(categoryToDelete)}
+        title="Excluir categoria"
+        description={`Excluir "${categoryToDelete?.name}" permanentemente? Esta ação não é permitida se houver lançamentos vinculados.`}
+        confirmLabel="Excluir categoria"
+        pending={isDeleting}
+        onClose={() => {
+          if (!isDeleting) setCategoryToDelete(null)
+        }}
+        onConfirm={handleDelete}
+      />
     </section>
   )
 }
