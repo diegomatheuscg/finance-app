@@ -97,7 +97,7 @@ function TransactionModal({ categories, transaction, onClose, onSaved, walletId 
 }
 
 export function TransactionsPage() {
-  const { activeWallet, activeWalletId, transactionUpdateKey } = useWallet()
+  const { activeWallet, activeWalletId, wallets, selectWallet, transactionUpdateKey } = useWallet()
   const [transactions, setTransactions] = useState([])
   const [categories, setCategories] = useState([])
   const [pageData, setPageData] = useState({ number: 0, totalPages: 0, totalElements: 0 })
@@ -206,22 +206,46 @@ export function TransactionsPage() {
           </Button>
         )}
       </div>
-      <div className="grid gap-3 rounded-xl border bg-card p-4 md:grid-cols-5">
-        <select className="h-10 rounded-md border bg-background px-3 text-sm" value={filters.type} onChange={(event) => updateFilter('type', event.target.value)}>
-          <option value="">Todos os tipos</option>
-          <option value="INCOME">Receitas</option>
-          <option value="EXPENSE">Despesas</option>
-        </select>
-        <select className="h-10 rounded-md border bg-background px-3 text-sm" value={filters.categoryId} onChange={(event) => updateFilter('categoryId', event.target.value)}>
-          <option value="">Todas as categorias</option>
-          {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
-        </select>
-        <input className="h-10 rounded-md border bg-background px-3 text-sm" type="date" max={todayLocal} value={filters.startDate} onChange={(event) => updateFilter('startDate', event.target.value)} />
-        <input className="h-10 rounded-md border bg-background px-3 text-sm" type="date" max={todayLocal} value={filters.endDate} onChange={(event) => updateFilter('endDate', event.target.value)} />
+      <div className="grid gap-3 rounded-xl border bg-card p-4 md:grid-cols-3">
+        <label className="grid gap-1 text-xs font-medium text-muted-foreground">
+          Carteira
+          <select
+            className="h-10 rounded-md border bg-background px-3 text-sm font-normal text-foreground"
+            value={activeWalletId || ''}
+            onChange={(event) => selectWallet(event.target.value)}
+          >
+            {wallets.map((wallet) => (
+              <option key={wallet.id} value={wallet.id}>{wallet.name}</option>
+            ))}
+          </select>
+        </label>
+        <label className="grid gap-1 text-xs font-medium text-muted-foreground">
+          De
+          <input className="h-10 rounded-md border bg-background px-3 text-sm font-normal text-foreground" type="date" max={todayLocal} value={filters.startDate} onChange={(event) => updateFilter('startDate', event.target.value)} />
+        </label>
+        <label className="grid gap-1 text-xs font-medium text-muted-foreground">
+          Até
+          <input className="h-10 rounded-md border bg-background px-3 text-sm font-normal text-foreground" type="date" max={todayLocal} value={filters.endDate} onChange={(event) => updateFilter('endDate', event.target.value)} />
+        </label>
+        <label className="grid gap-1 text-xs font-medium text-muted-foreground">
+          Tipo
+          <select className="h-10 rounded-md border bg-background px-3 text-sm font-normal text-foreground" value={filters.type} onChange={(event) => updateFilter('type', event.target.value)}>
+            <option value="">Todos os tipos</option>
+            <option value="INCOME">Receitas</option>
+            <option value="EXPENSE">Despesas</option>
+          </select>
+        </label>
+        <label className="grid gap-1 text-xs font-medium text-muted-foreground">
+          Categoria
+          <select className="h-10 rounded-md border bg-background px-3 text-sm font-normal text-foreground" value={filters.categoryId} onChange={(event) => updateFilter('categoryId', event.target.value)}>
+            <option value="">Todas as categorias</option>
+            {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+          </select>
+        </label>
         <Button type="button" variant="outline" onClick={() => {
           setSuccessMessage('')
           setFilters({ type: '', categoryId: '', startDate: '', endDate: '', page: 0, size: 10 })
-        }}>Limpar filtros</Button>
+        }} className="self-end">Limpar filtros</Button>
       </div>
       {filterError && (
         <Alert variant="destructive">

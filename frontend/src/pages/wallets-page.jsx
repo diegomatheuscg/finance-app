@@ -7,6 +7,16 @@ import { useWallet } from '@/contexts/wallet-context'
 import { useAuth } from '@/hooks/use-auth'
 import { walletApi } from '@/lib/api'
 
+const ROLE_LABELS = {
+  OWNER: 'Proprietário',
+  EDITOR: 'Editor',
+  VIEWER: 'Visualizador',
+}
+
+function roleLabel(role) {
+  return ROLE_LABELS[role] || role
+}
+
 function Modal({ title, children, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -42,8 +52,8 @@ function MemberFields({ memberEmail, memberRole, onEmailChange, onRoleChange, on
         value={memberRole}
         onChange={(event) => onRoleChange(event.target.value)}
       >
-        <option value="VIEWER">VIEWER</option>
-        <option value="EDITOR">EDITOR</option>
+        <option value="VIEWER">{roleLabel('VIEWER')}</option>
+        <option value="EDITOR">{roleLabel('EDITOR')}</option>
       </select>
       <Button type="button" onClick={onAdd}>Adicionar à lista</Button>
     </div>
@@ -313,7 +323,7 @@ export function WalletsPage() {
               <p className="mt-1 text-sm text-muted-foreground">
                 {wallet.description || 'Sem descrição'}
               </p>
-              <p className="mt-2 text-xs text-muted-foreground">{wallet.userRole}</p>
+              <p className="mt-2 text-xs text-muted-foreground">{roleLabel(wallet.userRole)}</p>
             </div>
             <div className="flex shrink-0 gap-2">
               {wallet.userRole === 'OWNER' && (
@@ -374,7 +384,7 @@ export function WalletsPage() {
                 {members.map((member, index) => (
                   <div className="flex items-center gap-2 rounded-md border p-3" key={`${member.email}-${index}`}>
                     <span className="min-w-0 flex-1 truncate text-sm">{member.email}</span>
-                    <span className="text-xs text-muted-foreground">{member.role}</span>
+                    <span className="text-xs text-muted-foreground">{roleLabel(member.role)}</span>
                     <Button
                       type="button"
                       variant="outline"
@@ -412,9 +422,9 @@ export function WalletsPage() {
                       {member.name && <p className="truncate text-xs text-muted-foreground">{member.email}</p>}
                     </div>
                     {member.pending ? (
-                      <span className="text-xs text-muted-foreground">{member.role}</span>
+                      <span className="text-xs text-muted-foreground">{roleLabel(member.role)}</span>
                     ) : member.role === 'OWNER' ? (
-                      <span className="text-sm text-muted-foreground">OWNER</span>
+                      <span className="text-sm text-muted-foreground">{roleLabel(member.role)}</span>
                     ) : (
                       <>
                         <select
@@ -423,8 +433,8 @@ export function WalletsPage() {
                           value={member.role}
                           onChange={(event) => handleRoleChange(member, event.target.value)}
                         >
-                          <option value="EDITOR">EDITOR</option>
-                          <option value="VIEWER">VIEWER</option>
+                          <option value="EDITOR">{roleLabel('EDITOR')}</option>
+                          <option value="VIEWER">{roleLabel('VIEWER')}</option>
                         </select>
                         {isOwner && member.userId !== user?.id && (
                           <Button type="button" variant="outline" size="sm" onClick={() => setConfirmAction({ type: 'remove-member', member })}>
