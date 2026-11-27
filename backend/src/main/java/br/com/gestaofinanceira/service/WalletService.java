@@ -1,10 +1,11 @@
 package br.com.gestaofinanceira.service;
 
-import br.com.gestaofinanceira.dto.wallet.WalletRequest;
-import br.com.gestaofinanceira.dto.wallet.WalletResponse;
-import br.com.gestaofinanceira.dto.wallet.UpdateMemberRoleRequest;
+import br.com.gestaofinanceira.dto.wallet.CreateWalletRequest;
 import br.com.gestaofinanceira.dto.wallet.WalletMemberRequest;
 import br.com.gestaofinanceira.dto.wallet.WalletMemberResponse;
+import br.com.gestaofinanceira.dto.wallet.UpdateMemberRoleRequest;
+import br.com.gestaofinanceira.dto.wallet.WalletRequest;
+import br.com.gestaofinanceira.dto.wallet.WalletResponse;
 import br.com.gestaofinanceira.entity.Carteira;
 import br.com.gestaofinanceira.entity.CarteiraMembro;
 import br.com.gestaofinanceira.entity.Usuario;
@@ -19,9 +20,11 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.ArrayList;
+import java.util.Set;
 
 @Service
 @Transactional(readOnly = true)
@@ -56,9 +59,10 @@ public class WalletService {
     }
 
     @Transactional
-    public WalletResponse create(Long userId, WalletRequest request) {
+    public WalletResponse create(Long userId, CreateWalletRequest request) {
         Usuario usuario = usuarioRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário autenticado não encontrado"));
+        List<InitialMember> initialMembers = resolveInitialMembers(userId, request.getMembers());
 
         Carteira carteira = Carteira.builder()
                 .dono(usuario)
@@ -66,7 +70,23 @@ public class WalletService {
                 .descricao(normalizeOptional(request.getDescription()))
                 .build();
 
-        return toResponse(carteiraRepository.save(carteira), userId);
+        Carteira savedWallet = carteiraRepository.save(carteira);
+        List<CarteiraMembro> savedMembers = initialMembers.stream()
+                .map(initialMember -> CarteiraMembro.builder()
+                        .carteira(savedWallet)
+                        .usuario(initialMember.usuario())
+                        .papel(initialMember.role())
+                        .build())
+                .toList();
+        membroRepository.saveAll(savedMembers);
+        savedMembers.forEach(member -> emailService.sendWalletMemberEmail(
+                member.getUsuario().getEmail(),
+                member.getUsuario().getNome(),
+                savedWallet.getNome(),
+                member.getPapel().name(),
+                usuario.getNome()));
+
+        return toResponse(savedWallet, userId);
     }
 
     @Transactional
@@ -173,6 +193,32 @@ public class WalletService {
         throw new AccessDeniedException("Você não é membro desta carteira");
     }
 
+    private List<InitialMember> resolveInitialMembers(Long ownerId, List<WalletMemberRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            return List.of();
+        }
+
+        Set<Long> memberIds = new HashSet<>();
+        List<InitialMember> initialMembers = new ArrayList<>();
+        for (WalletMemberRequest request : requests) {
+            if (request.getRole() == PapelCarteira.OWNER) {
+                throw new BusinessException("O papel OWNER pertence somente ao dono da carteira");
+            }
+
+            String email = request.getEmail().trim().toLowerCase(Locale.ROOT);
+            Usuario member = usuarioRepository.findByEmail(email)
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+            if (member.getId().equals(ownerId)) {
+                throw new ConflictException("O dono da carteira já possui acesso a ela");
+            }
+            if (!memberIds.add(member.getId())) {
+                throw new ConflictException("O usuário já foi adicionado à lista de membros");
+            }
+            initialMembers.add(new InitialMember(member, request.getRole()));
+        }
+        return initialMembers;
+    }
+
     private Carteira findWalletOwnedBy(Long walletId, Long userId) {
         Carteira carteira = findWallet(walletId);
         if (!isOwner(carteira, userId)) {
@@ -221,5 +267,8 @@ public class WalletService {
 
     private String normalizeOptional(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private record InitialMember(Usuario usuario, PapelCarteira role) {
     }
 }

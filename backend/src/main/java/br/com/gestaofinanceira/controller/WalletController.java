@@ -1,5 +1,6 @@
 package br.com.gestaofinanceira.controller;
 
+import br.com.gestaofinanceira.dto.wallet.CreateWalletRequest;
 import br.com.gestaofinanceira.dto.wallet.WalletRequest;
 import br.com.gestaofinanceira.dto.wallet.WalletResponse;
 import br.com.gestaofinanceira.dto.wallet.UpdateMemberRoleRequest;
@@ -50,7 +51,7 @@ public class WalletController {
     @PostMapping
     public ResponseEntity<WalletResponse> create(
             @AuthenticationPrincipal AuthenticatedUser user,
-            @Valid @RequestBody WalletRequest request) {
+            @Valid @RequestBody CreateWalletRequest request) {
         WalletResponse created = walletService.create(user.userId(), request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")

@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useWallet } from '@/contexts/wallet-context'
 import { useAuth } from '@/hooks/use-auth'
 import { walletApi } from '@/lib/api'
@@ -47,14 +48,15 @@ function MemberFields({ memberEmail, memberRole, onEmailChange, onRoleChange, on
         value={memberEmail}
         onChange={(event) => onEmailChange(event.target.value)}
       />
-      <select
-        className="h-10 rounded-md border bg-background px-3 text-sm"
-        value={memberRole}
-        onChange={(event) => onRoleChange(event.target.value)}
-      >
-        <option value="VIEWER">{roleLabel('VIEWER')}</option>
-        <option value="EDITOR">{roleLabel('EDITOR')}</option>
-      </select>
+      <Select value={memberRole} onValueChange={onRoleChange}>
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="VIEWER">{roleLabel('VIEWER')}</SelectItem>
+          <SelectItem value="EDITOR">{roleLabel('EDITOR')}</SelectItem>
+        </SelectContent>
+      </Select>
       <Button type="button" onClick={onAdd}>Adicionar à lista</Button>
     </div>
   )
@@ -155,14 +157,10 @@ export function WalletsPage() {
         const createdWallet = await walletApi.create({
           name: name.trim(),
           description: description.trim() || null,
+          members: members
+            .filter((member) => member.pending)
+            .map(({ email, role }) => ({ email, role })),
         })
-        const pendingMembers = members.filter((member) => member.pending)
-        for (const member of pendingMembers) {
-          await walletApi.addMember(createdWallet.id, {
-            email: member.email,
-            role: member.role,
-          })
-        }
         await reloadWallets(createdWallet.id)
       } else {
         await walletApi.update(modal.walletId, {
@@ -427,15 +425,19 @@ export function WalletsPage() {
                       <span className="text-sm text-muted-foreground">{roleLabel(member.role)}</span>
                     ) : (
                       <>
-                        <select
-                          className="h-9 rounded-md border bg-background px-2 text-sm"
+                        <Select
                           disabled={!isOwner || member.role === 'OWNER'}
                           value={member.role}
-                          onChange={(event) => handleRoleChange(member, event.target.value)}
+                          onValueChange={(role) => handleRoleChange(member, role)}
                         >
-                          <option value="EDITOR">{roleLabel('EDITOR')}</option>
-                          <option value="VIEWER">{roleLabel('VIEWER')}</option>
-                        </select>
+                          <SelectTrigger className="h-9 w-[150px] px-2 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="EDITOR">{roleLabel('EDITOR')}</SelectItem>
+                            <SelectItem value="VIEWER">{roleLabel('VIEWER')}</SelectItem>
+                          </SelectContent>
+                        </Select>
                         {isOwner && member.userId !== user?.id && (
                           <Button type="button" variant="outline" size="sm" onClick={() => setConfirmAction({ type: 'remove-member', member })}>
                             Remover
