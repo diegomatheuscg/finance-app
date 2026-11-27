@@ -3,8 +3,10 @@ package br.com.gestaofinanceira.controller;
 import br.com.gestaofinanceira.dto.dashboard.DashboardSummaryResponse;
 import br.com.gestaofinanceira.dto.insight.InsightResponse;
 import br.com.gestaofinanceira.entity.Carteira;
+import br.com.gestaofinanceira.entity.Transacao;
 import br.com.gestaofinanceira.exception.ResourceNotFoundException;
 import br.com.gestaofinanceira.repository.CarteiraRepository;
+import br.com.gestaofinanceira.repository.TransacaoRepository;
 import br.com.gestaofinanceira.security.AuthenticatedUser;
 import br.com.gestaofinanceira.service.DashboardService;
 import br.com.gestaofinanceira.service.GeminiInsightService;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/wallets/{walletId}/insights")
@@ -24,14 +27,17 @@ public class InsightController {
 
     private final DashboardService dashboardService;
     private final CarteiraRepository carteiraRepository;
+    private final TransacaoRepository transacaoRepository;
     private final GeminiInsightService geminiInsightService;
 
     public InsightController(
             DashboardService dashboardService,
             CarteiraRepository carteiraRepository,
+            TransacaoRepository transacaoRepository,
             GeminiInsightService geminiInsightService) {
         this.dashboardService = dashboardService;
         this.carteiraRepository = carteiraRepository;
+        this.transacaoRepository = transacaoRepository;
         this.geminiInsightService = geminiInsightService;
     }
 
@@ -45,6 +51,8 @@ public class InsightController {
                 user.userId(), walletId, startDate, endDate);
         Carteira wallet = carteiraRepository.findById(walletId)
                 .orElseThrow(() -> new ResourceNotFoundException("Carteira não encontrada"));
-        return geminiInsightService.generate(wallet.getNome(), startDate, endDate, summary);
+        List<Transacao> transactions = transacaoRepository.findByCarteiraIdAndDataBetween(
+                walletId, startDate, endDate);
+        return geminiInsightService.generate(wallet.getNome(), startDate, endDate, summary, transactions);
     }
 }

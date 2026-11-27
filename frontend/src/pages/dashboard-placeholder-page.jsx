@@ -252,8 +252,8 @@ export function DashboardPlaceholderPage() {
               <CardHeader>
                 <CardTitle>Análise financeira com IA</CardTitle>
                 <CardDescription>
-                  A análise envia o nome da carteira e valores agregados ao Google Gemini, sem descrições
-                  de lançamentos.{' '}
+                  A análise envia o nome da carteira, valores agregados e descrições dos lançamentos do
+                  período selecionado ao Google Gemini.{' '}
                   {insight && `${insight.walletName} · ${formatLocalDate(insight.period.startDate)} a ${formatLocalDate(insight.period.endDate)}`}
                 </CardDescription>
               </CardHeader>
