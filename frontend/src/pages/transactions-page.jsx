@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useWallet } from '@/contexts/wallet-context'
 import { categoryApi, transactionApi } from '@/lib/api'
 
@@ -62,13 +63,18 @@ function TransactionModal({ categories, transaction, onClose, onSaved, walletId 
         <form className="mt-5 grid gap-4" onSubmit={handleSubmit}>
           <label className="grid gap-1.5 text-sm font-medium">
             Tipo
-            <select className="h-10 rounded-md border bg-background px-3 font-normal" value={type} onChange={(event) => {
-              setType(event.target.value)
+            <Select value={type} onValueChange={(value) => {
+              setType(value)
               setCategoryId('')
             }}>
-              <option value="EXPENSE">Despesa</option>
-              <option value="INCOME">Receita</option>
-            </select>
+              <SelectTrigger className="font-normal">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="EXPENSE">Despesa</SelectItem>
+                <SelectItem value="INCOME">Receita</SelectItem>
+              </SelectContent>
+            </Select>
           </label>
           <label className="grid gap-1.5 text-sm font-medium">
             Valor
@@ -80,10 +86,20 @@ function TransactionModal({ categories, transaction, onClose, onSaved, walletId 
           </label>
           <label className="grid gap-1.5 text-sm font-medium">
             Categoria
-            <select className="h-10 rounded-md border bg-background px-3 font-normal" value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>
-              <option value="">Sem categoria</option>
-              {compatibleCategories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
-            </select>
+            <Select
+              value={categoryId || 'none'}
+              onValueChange={(value) => setCategoryId(value === 'none' ? '' : value)}
+            >
+              <SelectTrigger className="font-normal">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem categoria</SelectItem>
+                {compatibleCategories.map((category) => (
+                  <SelectItem key={category.id} value={String(category.id)}>{category.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </label>
           <label className="grid gap-1.5 text-sm font-medium">
             Descrição
@@ -209,15 +225,16 @@ export function TransactionsPage() {
       <div className="grid gap-3 rounded-xl border bg-card p-4 md:grid-cols-3">
         <label className="grid gap-1 text-xs font-medium text-muted-foreground">
           Carteira
-          <select
-            className="h-10 rounded-md border bg-background px-3 text-sm font-normal text-foreground"
-            value={activeWalletId || ''}
-            onChange={(event) => selectWallet(event.target.value)}
-          >
-            {wallets.map((wallet) => (
-              <option key={wallet.id} value={wallet.id}>{wallet.name}</option>
-            ))}
-          </select>
+          <Select value={activeWalletId || ''} onValueChange={selectWallet}>
+            <SelectTrigger className="text-sm font-normal">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {wallets.map((wallet) => (
+                <SelectItem key={wallet.id} value={String(wallet.id)}>{wallet.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </label>
         <label className="grid gap-1 text-xs font-medium text-muted-foreground">
           De
@@ -229,18 +246,36 @@ export function TransactionsPage() {
         </label>
         <label className="grid gap-1 text-xs font-medium text-muted-foreground">
           Tipo
-          <select className="h-10 rounded-md border bg-background px-3 text-sm font-normal text-foreground" value={filters.type} onChange={(event) => updateFilter('type', event.target.value)}>
-            <option value="">Todos os tipos</option>
-            <option value="INCOME">Receitas</option>
-            <option value="EXPENSE">Despesas</option>
-          </select>
+          <Select
+            value={filters.type || 'all'}
+            onValueChange={(value) => updateFilter('type', value === 'all' ? '' : value)}
+          >
+            <SelectTrigger className="text-sm font-normal">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os tipos</SelectItem>
+              <SelectItem value="INCOME">Receitas</SelectItem>
+              <SelectItem value="EXPENSE">Despesas</SelectItem>
+            </SelectContent>
+          </Select>
         </label>
         <label className="grid gap-1 text-xs font-medium text-muted-foreground">
           Categoria
-          <select className="h-10 rounded-md border bg-background px-3 text-sm font-normal text-foreground" value={filters.categoryId} onChange={(event) => updateFilter('categoryId', event.target.value)}>
-            <option value="">Todas as categorias</option>
-            {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
-          </select>
+          <Select
+            value={filters.categoryId || 'all'}
+            onValueChange={(value) => updateFilter('categoryId', value === 'all' ? '' : value)}
+          >
+            <SelectTrigger className="text-sm font-normal">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as categorias</SelectItem>
+              {categories.map((category) => (
+                <SelectItem key={category.id} value={String(category.id)}>{category.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </label>
         <Button type="button" variant="outline" onClick={() => {
           setSuccessMessage('')

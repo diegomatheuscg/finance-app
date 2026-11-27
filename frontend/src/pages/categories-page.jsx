@@ -12,6 +12,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { categoryApi } from '@/lib/api'
 
 const categoryColors = [
@@ -131,14 +132,15 @@ function CategoryModal({ category, onClose, onSaved }) {
           </label>
           <label className="grid gap-1.5 text-sm font-medium">
             Tipo
-            <select
-              className="h-10 rounded-md border bg-background px-3 font-normal"
-              value={type}
-              onChange={(event) => setType(event.target.value)}
-            >
-              <option value="EXPENSE">Despesa</option>
-              <option value="INCOME">Receita</option>
-            </select>
+            <Select value={type} onValueChange={setType}>
+              <SelectTrigger className="font-normal">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="EXPENSE">Despesa</SelectItem>
+                <SelectItem value="INCOME">Receita</SelectItem>
+              </SelectContent>
+            </Select>
           </label>
           <div className="grid gap-4 sm:grid-cols-2">
             <fieldset className="grid gap-2 text-sm font-medium">

@@ -9,6 +9,7 @@ import {
   WalletCards,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useWallet } from '@/contexts/wallet-context'
 import { useAuth } from '@/hooks/use-auth'
 
@@ -42,15 +43,16 @@ export function AuthenticatedLayout() {
             {wallets.length > 0 && (
               <label className="flex items-center gap-2">
                 Carteira
-                <select
-                  className="h-9 rounded-md border bg-background px-2"
-                  value={activeWalletId || ''}
-                  onChange={(event) => selectWallet(event.target.value)}
-                >
-                  {wallets.map((wallet) => (
-                    <option key={wallet.id} value={wallet.id}>{wallet.name}</option>
-                  ))}
-                </select>
+                <Select value={activeWalletId || ''} onValueChange={selectWallet}>
+                  <SelectTrigger className="h-9 w-[180px] px-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {wallets.map((wallet) => (
+                      <SelectItem key={wallet.id} value={String(wallet.id)}>{wallet.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </label>
             )}
             <span className="hidden text-muted-foreground sm:inline">{user?.name || user?.email}</span>
